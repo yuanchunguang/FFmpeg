@@ -426,7 +426,6 @@ static int init_input(AVFormatContext *s, const char *filename,
     int ret;
     AVProbeData pd = { filename, NULL, 0 };
     int score = AVPROBE_SCORE_RETRY;
-
     if (s->pb) {
         s->flags |= AVFMT_FLAG_CUSTOM_IO;
         if (!s->iformat)
@@ -437,20 +436,17 @@ static int init_input(AVFormatContext *s, const char *filename,
                                       "will be ignored with AVFMT_NOFILE format.\n");
         return 0;
     }
-
     if ((s->iformat && s->iformat->flags & AVFMT_NOFILE) ||
         (!s->iformat && (s->iformat = av_probe_input_format2(&pd, 0, &score))))
         return score;
-
     if ((ret = s->io_open(s, &s->pb, filename, AVIO_FLAG_READ | s->avio_flags, options)) < 0)
         return ret;
-
     if (s->iformat)
         return 0;
     return av_probe_input_buffer2(s->pb, &s->iformat, filename,
                                  s, 0, s->format_probesize);
 }
-//winston todo ºÏ²¢ff_packet_list_putº¯Êý
+//winston todo 
 static int add_to_pktbuf(AVPacketList **packet_buffer, AVPacket *pkt,
                          AVPacketList **plast_pktl, int ref)
 {
@@ -583,6 +579,7 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
         av_log(NULL, AV_LOG_ERROR, "Input context has not been properly allocated by avformat_alloc_context() and is not NULL either\n");
         return AVERROR(EINVAL);
     }
+    ff_format_set_url(s,filename);
     if (fmt)
         s->iformat = fmt;
 
@@ -591,17 +588,25 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
 
     if (s->pb) // must be before any goto fail
         s->flags |= AVFMT_FLAG_CUSTOM_IO;
-
     if ((ret = av_opt_set_dict(s, &tmp)) < 0)
         goto fail;
-    if(s->app_ctx_intptr)
+    //winston     to  do
+    if(s->app_ctx_intptr==NULL)
+    {
+        AVDictionaryEntry *app_ctx_opt = av_dict_get(*options, "ijkapplication", NULL, AV_DICT_MATCH_CASE);
+        AVApplicationContext * app_ctx = NULL;
+        if (app_ctx_opt) 
+        {
+              s->app_ctx = (int64_t)(intptr_t)strtoll(app_ctx_opt->value, NULL, 10);
+              s->app_ctx_intptr =  (int64_t)(intptr_t)strtoll(app_ctx_opt->value, NULL, 10);
+        }
+    }else  if(s->app_ctx_intptr)
     {
         s->app_ctx = (AVApplicationContext *)(intptr_t)s->app_ctx_intptr;
         av_dict_set_int(&tmp, "ijkapplication", s->app_ctx_intptr, 0);
     }
-
     int64_t timebegin = av_gettime();
-    // add by zy
+  
     //s->app_ctx is null in av split, it is not important.
     //MP4 is for video advertisement.
 	if (s->app_ctx && (!s->app_ctx->pss->m3u8_complete)) {
@@ -611,18 +616,16 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
 			startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_begin = %lld", av_gettime() / 1000);
 		}
 	}
-    
     if (s->app_ctx
         && (!s->app_ctx->pss->master_m3u8_complete)
         && s->app_ctx->pss->media_type == AV_SEPARATE
         && av_strnstr(filename, ".m3u8", strlen(filename)) ){
         startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_begin_master = %lld", av_gettime() / 1000);
     }
-    
     //////////////////////////////////////////////////////////
 
     if ((ret = init_input(s, filename, &tmp)) < 0){
-    	// TODO: down load m3u8 failed error code! add by tao
+    	// TODO: down load m3u8 failed error code! 
         av_log(s, AV_LOG_ERROR, "fail to download m3u8 file %s\n", filename);
     	/****************************************************************/
         if(s->app_ctx && (!s->app_ctx->pss->m3u8_complete)){
@@ -631,7 +634,7 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
         }
         goto fail;
     }
-    // add by zy
+
 	if (s->app_ctx && (!s->app_ctx->pss->m3u8_complete)) {
 		if (av_match_ext(filename, FILE_EXT_MP4)) {
 			startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN,"download_mp4_finish = %lld", av_gettime() / 1000);
@@ -641,7 +644,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
             s->app_ctx->pss->m3u8_complete = 1;
 		}
 	}
-    
     if (s->app_ctx
         && (!s->app_ctx->pss->master_m3u8_complete)
         && s->app_ctx->pss->media_type == AV_SEPARATE
@@ -684,7 +686,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
         if(tag_reconnect_count = av_dict_get(*options, "reconnect_count", NULL, 0))
             av_dict_set(&tmp, "hls_reconnect_count", tag_reconnect_count->value, 0);
     }
-    
     /////////////////////////////////////////////////////////////
 
     s->probe_score = ret;
@@ -696,7 +697,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
             goto fail;
         }
     }
-
     if (!s->protocol_blacklist && s->pb && s->pb->protocol_blacklist) {
         s->protocol_blacklist = av_strdup(s->pb->protocol_blacklist);
         if (!s->protocol_blacklist) {
@@ -710,7 +710,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
         ret = AVERROR(EINVAL);
         goto fail;
     }
-
     avio_skip(s->pb, s->skip_initial_bytes);
 
     /* Check filename in case an image number is expected. */
@@ -737,7 +736,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
                 goto fail;
         }
     }
-
     /* e.g. AVFMT_NOFILE formats will not have a AVIOContext */
     if (s->pb)
         ff_id3v2_read(s, ID3v2_DEFAULT_MAGIC, &id3v2_extra_meta, 0);
@@ -765,7 +763,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
         if (s->error_recognition & AV_EF_EXPLODE)
             return AVERROR_INVALIDDATA;
     }
-
     if (id3v2_extra_meta) {
         if (!strcmp(s->iformat->name, "mp3") || !strcmp(s->iformat->name, "aac") ||
             !strcmp(s->iformat->name, "tta")) {
@@ -789,7 +786,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
     s->internal->raw_packet_buffer_remaining_size = RAW_PACKET_BUFFER_SIZE;
 
     update_stream_avctx(s);
-
     for (i = 0; i < s->nb_streams; i++)
         s->streams[i]->internal->orig_codec_id = s->streams[i]->codecpar->codec_id;
 

@@ -367,7 +367,7 @@ end:
 
 static void (*av_log_callback)(void*, int, const char*, va_list) =
     av_log_default_callback;
-//zy add
+//APP to do
 static void (*star_log_callback)(void*, int, const char*, va_list) =
     av_log_default_callback;
 ///////////////////////////////////
@@ -382,7 +382,7 @@ void av_log(void* avcl, int level, const char *fmt, ...)
     av_vlog(avcl, level, fmt, vl);
     va_end(vl);
 }
-//zy add
+//APP to do
 void startimes_error_log(void* app_ctx, int level, const char *fmt, ...)
 {
     /*AVClass* avc = avcl ? *(AVClass **) avcl : NULL;
@@ -489,7 +489,7 @@ void av_vlog(void* avcl, int level, const char *fmt, va_list vl)
     if (log_callback)
         log_callback(avcl, level, fmt, vl);
 }
-// zy add
+//APP to do
 void star_vlog(void* app_ctx, int level, const char *fmt, va_list vl)
 {
     void (*log_callback)(void*, int, const char*, va_list) = star_log_callback;
@@ -521,7 +521,7 @@ void av_log_set_callback(void (*callback)(void*, int, const char*, va_list))
 {
     av_log_callback = callback;
 }
-//zy add
+//APP to do
 void star_log_set_callback(void (*callback)(void*, int, const char*, va_list))
 {
     star_log_callback = callback;

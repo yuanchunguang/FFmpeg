@@ -671,7 +671,6 @@ int avio_r8(AVIOContext *s)
 
 int avio_read(AVIOContext *s, unsigned char *buf, int size)
 {
-    //av_log(NULL, AV_LOG_TRACE, "chenwq: begin avio_read buffer len=%d\n", size);
     int len, size1;
 
     size1 = size;
@@ -706,13 +705,11 @@ int avio_read(AVIOContext *s, unsigned char *buf, int size)
             } else {
                 fill_buffer(s);
                 len = s->buf_end - s->buf_ptr;
-                //av_log(NULL, AV_LOG_TRACE, "chenwq: read to fill io buffer len=%d\n", len);
                 if (len == 0)
                     break;
             }
         } else {
             //consume data of io buffer
-            //av_log(NULL, AV_LOG_TRACE, "chenwq: consume io buffer data len=%d\n", len);
             memcpy(buf, s->buf_ptr, len);
             buf += len;
             s->buf_ptr += len;
@@ -721,11 +718,9 @@ int avio_read(AVIOContext *s, unsigned char *buf, int size)
     }
     if (size1 == size) {
         if (s->error){
-//            av_log(NULL, AV_LOG_ERROR, "chenwq: fail to avio_read, err=%s\n", av_err2str(s->error));
             return s->error;
         }
         if (avio_feof(s)){
-//            av_log(NULL, AV_LOG_INFO, "chenwq: avio_read read end of file\n");
             return AVERROR_EOF;
         }
     }
@@ -1090,6 +1085,7 @@ static int64_t io_read_seek(void *opaque, int stream_index, int64_t timestamp, i
 
 int ffio_fdopen(AVIOContext **s, URLContext *h)
 {
+
     AVIOInternal *internal = NULL;
     uint8_t *buffer = NULL;
     int buffer_size, max_packet_size;
@@ -1272,7 +1268,6 @@ int ffio_open_whitelist(AVIOContext **s, const char *filename, int flags,
 {
     URLContext *h;
     int err;
-
     err = ffurl_open_whitelist(&h, filename, flags, int_cb, options, whitelist, blacklist, NULL);
     if (err < 0)
         return err;
@@ -1281,7 +1276,6 @@ int ffio_open_whitelist(AVIOContext **s, const char *filename, int flags,
         ffurl_close(h);
         return err;
     }
-
 	if (h && h->app_ctx && h->app_ctx->caches && h->app_ctx->caches->cache) {
 		char bufferpath[256] = { };
 		snprintf(bufferpath, sizeof(bufferpath), "%s/%s",

@@ -156,7 +156,6 @@ AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened,
         } else
             nodat = ID3_GREATER_PROBE;
     }
-
     while ((fmt1 = av_demuxer_iterate(&i))) {
         if (!is_opened == !(fmt1->flags & AVFMT_NOFILE) && strcmp(fmt1->name, "image2"))
             continue;
@@ -228,7 +227,6 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
     int ret = 0, probe_size, buf_offset = 0;
     int score = 0;
     int ret2;
-
     if (!max_probe_size)
         max_probe_size = PROBE_BUF_MAX;
     else if (max_probe_size < PROBE_BUF_MIN) {
@@ -236,7 +234,6 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
                "Specified probe size value %u cannot be < %u\n", max_probe_size, PROBE_BUF_MIN);
         return AVERROR(EINVAL);
     }
-
     if (offset >= max_probe_size)
         return AVERROR(EINVAL);
 
@@ -258,7 +255,6 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
         av_freep(&mime_type);
     }
 #endif
-
     for (probe_size = PROBE_BUF_MIN; probe_size <= max_probe_size && !*fmt;
          probe_size = FFMIN(probe_size << 1,
                             FFMAX(max_probe_size, probe_size + 1))) {
@@ -283,7 +279,6 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
         pd.buf = &buf[offset];
 
         memset(pd.buf + pd.buf_size, 0, AVPROBE_PADDING_SIZE);
-
         /* Guess file format. */
         *fmt = av_probe_input_format2(&pd, 1, &score);
         if (*fmt) {
@@ -303,7 +298,6 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
 #endif
         }
     }
-
     if (!*fmt)
         ret = AVERROR_INVALIDDATA;
 

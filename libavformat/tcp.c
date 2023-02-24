@@ -1410,7 +1410,6 @@ static int tcp_open(URLContext *h, const char *uri, int flags)
     }
 
     freeaddrinfo(ai);
-    av_log(NULL, AV_LOG_DEBUG, "chenwq: tcp open complete mode=%s, fd=%d\n", h->flags&AVIO_FLAG_NONBLOCK?"nonblock":"blocked",fd );
     add_flow_log_string(s->app_ctx,s->url_start_status,FL_TCP_CONNECTIONS, get_tcp_connection_logs(s->app_ctx,s->url_start_status));
     return 0;
 
@@ -1713,7 +1712,6 @@ static int tcp_read(URLContext *h, uint8_t *buf, int size)
     if (ret == 0)
         return AVERROR_EOF;
     if (ret > 0){
-         av_log(NULL, AV_LOG_TRACE, "chenwq: tcp recv data, recv=%d, size=%d, fd=%d\n", ret, size, s->fd);
          av_application_did_io_tcp_read(s->app_ctx, (void*)h, ret);
     }else if(ret < 0){
          add_flow_log(s->app_ctx,s->url_start_status,FL_TCP_READ_ERROR, ff_neterrno());

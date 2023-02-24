@@ -59,7 +59,7 @@
 #include <zlib.h>
 #endif /* CONFIG_ZLIB */
 
-//chenwq decrese buffer size for fast avformat find stream info
+//decrese buffer size for fast avformat find stream info
 #define INITIAL_BUFFER_SIZE 32768//16384//
 #define MAX_FIELD_LEN 64
 #define MAX_CHARACTERISTICS_LEN 512
@@ -1358,7 +1358,6 @@ static int parse_playlist(HLSContext *c, const char *url,
 	int has_m3u8_optimize = 0;
 	int m3u8_optimize_need_read = 0;
     int m3u8_master_read_end = 0;
-    
     if( c->parallel_open && pls->_type == AVMEDIA_TYPE_AUDIO )
     {
         if (is_http && !in && c->http_persistent && c->playlist_pb_audio) {
@@ -1378,7 +1377,6 @@ static int parse_playlist(HLSContext *c, const char *url,
         if (is_http && !in && c->http_persistent && c->playlist_pb) {
             in = c->playlist_pb;
             ret = open_url_keepalive(c->ctx, &c->playlist_pb, url, NULL);
-            
             if (ret == AVERROR_EXIT) {
                 return ret;
             } else if (ret < 0) {
@@ -1388,8 +1386,6 @@ static int parse_playlist(HLSContext *c, const char *url,
             }
         }
     }
-    
-    
     if (!in) {
 #if 1
         AVDictionary *opts = NULL;
@@ -1398,21 +1394,17 @@ static int parse_playlist(HLSContext *c, const char *url,
         av_dict_copy(&opts, c->avio_opts, 0);
         /* Some HLS servers don't like being sent the range header */
         av_dict_set(&opts, "seekable", "0", 0);
-
         // broker prior HTTP options that should be consistent across requests
         av_dict_set(&opts, "user-agent", c->user_agent, 0);
         av_dict_set(&opts, "cookies", c->cookies, 0);
         av_dict_set(&opts, "headers", c->headers, 0);
         av_dict_set(&opts, "http_proxy", c->http_proxy, 0);
 
-        av_log(NULL, AV_LOG_TRACE,"chenwq: reload play list, interval=%lld\n", (av_gettime_relative()-pls->last_load_time)/1000);
-        
         if (c->http_persistent)
             av_dict_set(&opts, "multiple_requests", "1", 0);
         
         if (c->use_redirect_ip)
             av_dict_set(&opts, "use_redirect_ip", "1", 0);
-		
 		
 		URLStartStatus* pUSS = c->uss_default;
 		if (c->parallel_open && pls->_type == AVMEDIA_TYPE_AUDIO){
@@ -1424,7 +1416,6 @@ static int parse_playlist(HLSContext *c, const char *url,
         av_dict_free(&opts);
         if (ret < 0)
             return ret;
-        
         if( c->parallel_open )
         {
             if (is_http && c->http_persistent && pls->_type == AVMEDIA_TYPE_VIDEO)
@@ -1453,16 +1444,13 @@ static int parse_playlist(HLSContext *c, const char *url,
         close_in = 1;
 #endif
     }
-
     if (av_opt_get(in, "location", AV_OPT_SEARCH_CHILDREN, &new_url) >= 0 && strlen(new_url)>0 )
         url = new_url;
-
     read_chomp_line(in, line, sizeof(line));
     if (strcmp(line, "#EXTM3U")) {
         ret = AVERROR_INVALIDDATA;
         goto fail;
     }
-
     if (pls) {
         free_segment_list(pls);
         free_original_segment_list(pls);
@@ -1470,14 +1458,12 @@ static int parse_playlist(HLSContext *c, const char *url,
         pls->finished = 0;
         pls->type = PLS_TYPE_UNSPECIFIED;
     }
-    
     if (c && c->app_ctx && c->app_ctx->demuxer) {
         c->app_ctx->demuxer->slave = SEGMENT_TS;
         memset(c->app_ctx->demuxer->master, 0, sizeof(c->app_ctx->demuxer->master));
         strcpy(c->app_ctx->demuxer->master, "hls");
     }
     
-	
     char lang_tag[256]={0};
 	char *lang = NULL;
 	URLContext* url_ctx = ffio_geturlcontext(in);
@@ -1492,10 +1478,8 @@ static int parse_playlist(HLSContext *c, const char *url,
 		}	
 	}
 	
-	
     char audio_langs[1024] = {0};
 	int lang_index = 0;
-	
     while (!avio_feof(in) || m3u8_optimize_need_read ) {
 		if (c->use_m3u8_optimize_read && has_m3u8_optimize){
 			m3u8_optimize_need_read = combine_chomp_line(c, pls, line, sizeof(line));
@@ -1512,10 +1496,8 @@ static int parse_playlist(HLSContext *c, const char *url,
 		else{
 			read_chomp_line(in, line, sizeof(line));
 		}
-		
 		if (av_strstart(line, "#EXT-X-M3U8-OPTIMIZE:", &ptr) && c->use_m3u8_optimize_read ){
 			struct m3u8_read_optimize_info info = {{0}};
-			
             ff_parse_key_value(ptr, (ff_parse_key_val_cb) handle_m3u8_optimize_args, &info);	
 			
 			if (pls->m3u8_optimize)
@@ -1593,7 +1575,6 @@ static int parse_playlist(HLSContext *c, const char *url,
             if (ret < 0)
                 goto fail;
             ff_parse_key_value(ptr, (ff_parse_key_val_cb) handle_init_section_args, &info);
-            
             //live stream no need to update init section with same section data
             //such as go to see moov, update init secion with duplicated moov is useless
             if(pls->cur_init_section){
@@ -1664,7 +1645,6 @@ static int parse_playlist(HLSContext *c, const char *url,
                     memset(seg->iv, 0, sizeof(seg->iv));
                     AV_WB32(seg->iv + 12, seq);
                 }
-
                 if (key_type != KEY_NONE) {
                     if (key_type==KEY_STAR_CRYPT) {
                         seg->key = av_strdup(key);
@@ -1681,7 +1661,6 @@ static int parse_playlist(HLSContext *c, const char *url,
                 } else {
                     seg->key = NULL;
                 }
-
                 ff_make_absolute_url(tmp_str, sizeof(tmp_str), url, line);
 
 				if (c && c->app_ctx && c->app_ctx->caches
@@ -1715,17 +1694,15 @@ static int parse_playlist(HLSContext *c, const char *url,
                     ret = AVERROR(ENOMEM);
                     goto fail;
                 }
-
                 dynarray_add(&pls->segments, &pls->n_segments, seg);
-
                 //backup the segment because we will copy it to the playlist which is using. If not, the original segment will be missing.
+          
                 if(c->app_ctx->adaptive_bitrate_switching)
                 {
                 	struct segment *original_seg = clone_segment(seg);
                 	if( original_seg )
                 		dynarray_add(&pls->original_segments, &pls->original_n_segments, original_seg);
                 }
-
                 is_segment = 0;
 
                 seg->size = seg_size;
@@ -1739,8 +1716,6 @@ static int parse_playlist(HLSContext *c, const char *url,
                 }
 
                 seg->init_section = cur_init_section;
-				
-				//av_log(NULL, AV_LOG_DEBUG, "chenwq: parse play list to create segment, url=%s, startime=%lld, duration=%lld\n", seg->url, seg->start_time/AV_TIME_BASE,seg->duration/AV_TIME_BASE);
             }
         }
     }
@@ -1790,7 +1765,6 @@ static int read_from_url(struct playlist *pls, struct segment *seg,
     
     if (ret > 0){
         pls->cur_seg_offset += ret;
-        av_log(NULL, AV_LOG_TRACE, "chenwq: read ts data from io buffer, offset=%lld, buflen=%d, readlen=%d, url=%s\n", pls->cur_seg_offset, buf_size, ret,seg->url );
     }
     return ret;
 }
@@ -2390,7 +2364,7 @@ static int open_input(HLSContext *c, struct playlist *pls, struct segment *seg)
                 }
             }
             if(ret<0){
-                //add chenwq, interupt play when read key error, only when starting
+                //add winston, interupt play when read key error, only when starting
                 av_log(NULL, AV_LOG_ERROR, "Unable to get key, url=%s, ret=%d\n", seg->key, ret);
 				if(c->app_ctx && (!c->app_ctx->pss->complete)){
 					if (0!=key_error_code) {
@@ -2813,7 +2787,7 @@ reload:
             if ((ret = parse_playlist(c, v->url, v, NULL)) < 0) {
                 av_log(v->parent, AV_LOG_WARNING, "Failed to reload playlist %d\n",
                        v->index);
-                //chenwq: looply reload m3u8 if fail for http keepalive
+                //winston: looply reload m3u8 if fail for http keepalive
                 //fix bug of long time pause when playing live stream
                 if(c->app_ctx && c->app_ctx->lss->download_ts_data>0){
                     if (ff_check_interrupt(c->interrupt_callback)) {
@@ -2906,7 +2880,7 @@ reload:
         ret = update_init_section(v, seg);
         if (ret)
             return ret;
-        //zy add
+        //APP to do
 		if(c->app_ctx && (!c->app_ctx->pss->complete)){
 			if(c->parallel_open){
 				if((!c->uss_default->complete) && v->_type == AVMEDIA_TYPE_VIDEO ){
@@ -2935,7 +2909,7 @@ reload:
                 return ret;
             av_log(v->parent, AV_LOG_WARNING, "Failed to open segment of playlist %d\n",
                    v->index);
-            //zy add
+            //APP to do
             //v->cur_seq_no += 1;
             if( ret == AVERROR_HTTP_NOT_FOUND )
             {
@@ -2976,7 +2950,6 @@ reload:
         return copy_size;
     }
 
-    av_log(NULL, AV_LOG_TRACE, "chenwq: try to read ts data from io buffer, bufsize=%d\n", buf_size);
     struct segment *cseg = current_segment(v);
     ret = read_from_url(v, cseg, buf, buf_size, READ_NORMAL);
 
@@ -3338,7 +3311,7 @@ static void *open_demuxer_threadproc(void* paramlist){
          * so avformat_close_input shouldn't be called. If
          * avformat_open_input fails below, it frees and zeros the
          * context, so it doesn't need any special treatment like this. */
-        //zy add
+        //APP to do
         // TODO : loading first segment error code! add by tao
         //startimes_error_log(NULL, STAR_LOG_MAIN, "error_code = %d download first ts failed",ret);
         /////////////////////////
@@ -3426,7 +3399,7 @@ static int hls_read_header(AVFormatContext *s)
 	
 	av_log(NULL, AV_LOG_DEBUG, "player_run:ffmpeg:firebase des_regular_rate:%d,des_retry_interval:%d\n", 
 		   c->des_regular_rate, c->des_retry_interval);
-    
+  
     if(s->app_ctx_intptr)
     {
         c->app_ctx = (AVApplicationContext *)(intptr_t)s->app_ctx_intptr;
@@ -3438,7 +3411,6 @@ static int hls_read_header(AVFormatContext *s)
 		}
 		
     }
-
     c->ctx                = s;
     c->interrupt_callback = &s->interrupt_callback;
     c->strict_std_compliance = s->strict_std_compliance;
@@ -3698,7 +3670,7 @@ static int hls_read_header(AVFormatContext *s)
 				
 				avcodec_parameters_copy(st->codecpar, pls->ctx->streams[j]->codecpar);
 				
-				//add chenwq
+				//add winston
 				av_dict_copy(&st->metadata,pls->ctx->streams[j]->metadata,0);
 				
 				if (pls->is_id3_timestamped) /* custom timestamps via id3 */
@@ -3768,7 +3740,7 @@ static int hls_read_header(AVFormatContext *s)
                  * so avformat_close_input shouldn't be called. If
                  * avformat_open_input fails below, it frees and zeros the
                  * context, so it doesn't need any special treatment like this. */
-                //zy add
+                //APP to do
                 // TODO : loading first segment error code! add by tao
                 //startimes_error_log(NULL, STAR_LOG_MAIN, "error_code = %d download first ts failed",ret);
                 /////////////////////////
@@ -3838,7 +3810,7 @@ static int hls_read_header(AVFormatContext *s)
 
                 avcodec_parameters_copy(st->codecpar, pls->ctx->streams[j]->codecpar);
             
-            //add chenwq
+            //add winston
                 av_dict_copy(&st->metadata,pls->ctx->streams[j]->metadata,0);
 
                 if (pls->is_id3_timestamped) /* custom timestamps via id3 */

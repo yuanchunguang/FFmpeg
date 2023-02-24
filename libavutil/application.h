@@ -34,6 +34,11 @@
 #define AVAPP_EVENT_DID_HTTP_REDIRECT_IP   7 //AVAppHttpEvent
 #define AVAPP_EVENT_DID_HTTP_M3U8_OPTIMIZE   8 //AVAppHttpEvent
 #define AVAPP_EVENT_DID_PARSE_AUDIO_TRAKCS   9 //AVAppAudioTrackEvent
+#define AVAPP_EVENT_DID_QUIC_REDIRECT  20 //AVAppQUICEvent
+#define AVAPP_EVENT_DID_QUIC_RESPONSE  21 //AVAppQUICEvent
+#define AVAPP_EVENT_DID_QUIC_REQUST    22 //AVAppQUICEvent
+#define AVAPP_EVENT_DID_QUIC_STATS     23 //AVAppQUICEvent
+#define AVAPP_EVENT_DID_QUIC_REQUEST_STATS 24 //AVAppQUICEvent
 
 #define AVAPP_EVENT_ASYNC_STATISTIC     0x11000 //AVAppAsyncStatistic
 #define AVAPP_EVENT_ASYNC_READ_SPEED    0x11001 //AVAppAsyncReadSpeed
@@ -50,6 +55,9 @@
 
 #define FLOW_LOG_SIZE 8192   //for play flow log
 #define TCP_CONNECTION_LOG_TOTAL_SIZE 4096  //for tcp connect log
+
+#define QUIC_REQUEST_LOG_SIZE 8192*2   //for quic request flow log
+#define QUIC_CONNECTION_LOG_TOTAL_SIZE 4096*2  //for quic connect log
 
 #define STAR_MAX_NAME_NUM 1024
 #define STAR_MAX_IP_NUM 11
@@ -123,6 +131,19 @@ typedef struct AVAppHttpEvent
     char redirect_ip[1024];
 } AVAppHttpEvent;
 
+
+typedef struct AVAppQUICEvent
+{
+    void    *obj;
+    char     url[4096];
+    int      error;
+    int      http_code;
+    int      is_reused;//0rtt
+    char     proto[128];
+    int      quic_status; //fail 1, success 0
+    char     quic_request_stats[QUIC_REQUEST_LOG_SIZE];
+} AVAppQUICEvent;
+
 typedef struct AVAppIOTraffic
 {
     void   *obj;
@@ -159,6 +180,14 @@ typedef struct FlowLogStatus{
     char tcp_connection_logs[TCP_CONNECTION_LOG_TOTAL_SIZE];
     char tcp_rwtimeout_log[512];
 }FlowLogStatus;
+
+typedef struct QUICRequestLogStatus{
+    int64_t last_download_fail_timestamp;
+    char flow_log_info[QUIC_REQUEST_LOG_SIZE];
+    int  flow_log_need_send;
+    char tcp_connection_logs[QUIC_CONNECTION_LOG_TOTAL_SIZE];
+    char tcp_rwtimeout_log[512];
+}QUICRequestLogStatus;
 
 enum enumMediaType{
     AV_SEPARATE,
@@ -280,6 +309,7 @@ typedef struct URLStartStatus
     int complete;
 	int m3u8_complete;
 	FlowLogStatus *fls;
+    QUICRequestLogStatus *qrls;
 }URLStartStatus;
 
 
@@ -335,6 +365,11 @@ void av_application_on_async_statistic(AVApplicationContext *h, AVAppAsyncStatis
 void av_application_on_async_read_speed(AVApplicationContext *h, AVAppAsyncReadSpeed *speed);
 
 void av_application_did_parse_audio_tracks(AVApplicationContext *h, const char* tracks);
+void av_application_on_quic_event(AVApplicationContext *h, int event_type, AVAppQUICEvent *event);
+void av_application_on_quic_request(AVApplicationContext *h, const char *url);
+void av_application_on_quic_response(AVApplicationContext *h, const char *url, const char* proto, int http_code);
+void av_application_did_quic_stats(AVApplicationContext *h, int is_reused);
+void av_application_did_quic_request_stats(AVApplicationContext *h, int quic_status, const char *quic_request_stats);
 
 
 #endif /* AVUTIL_APPLICATION_H */

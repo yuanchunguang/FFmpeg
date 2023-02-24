@@ -259,7 +259,7 @@ static int http_open_cnx_internal(URLContext *h, AVDictionary **options)
 
     ff_url_join(buf, sizeof(buf), lower_proto, NULL, hostname, port, NULL);
 
-    if (!s->hd) {
+    if (!s->hd) {  
 		av_dict_set_int(options, "ijkapplication", (int64_t)(intptr_t)s->app_ctx, 0);
         if (s->app_ctx && s->url_start_status){
             //ffg_pss_set_http_path_info(s->app_ctx,local_path);
@@ -286,7 +286,7 @@ static int http_open_cnx_internal(URLContext *h, AVDictionary **options)
         if (err < 0)
             return err;
     }
-    else if(s->multiple_requests){
+    else if(s->multiple_requests){   
 		av_dict_set_int(options, "ijkapplication", (int64_t)(intptr_t)s->app_ctx, 0);
 		if (s->app_ctx && s->url_start_status){
 			s->url_start_status->path_type = ffg_get_http_path_info(local_path);

@@ -321,7 +321,7 @@ void av_log(void *avcl, int level, const char *fmt, ...) av_printf_format(3, 4);
 void av_vlog(void *avcl, int level, const char *fmt, va_list vl);
 
 
-//zy add
+//APP to do
 void star_vlog(void* avcl, int level, const char *fmt, va_list vl);
 void star_log_set_callback(void (*callback)(void*, int, const char*, va_list));
 /////////////////////////

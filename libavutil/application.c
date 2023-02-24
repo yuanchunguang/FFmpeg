@@ -83,6 +83,10 @@ int av_application_alloc(AVApplicationContext **ph, void *opaque)
 			return AVERROR(ENOMEM);
 		}
 		
+        h->uss_default->qrls = av_mallocz(sizeof(QUICRequestLogStatus));
+        if (!h->uss_default->qrls){
+            return AVERROR(ENOMEM);
+        }
 	}
 	
 	h->uss_alt=av_mallocz(sizeof(URLStartStatus));
@@ -95,6 +99,11 @@ int av_application_alloc(AVApplicationContext **ph, void *opaque)
 		if (!h->uss_alt->fls){
 			return AVERROR(ENOMEM);
 		}
+        
+        h->uss_alt->qrls = av_mallocz(sizeof(QUICRequestLogStatus));
+        if (!h->uss_alt->qrls){
+            return AVERROR(ENOMEM);
+        }
 	}
 	
     h->uss_default_segment=av_mallocz(sizeof(URLStartStatus));
@@ -109,6 +118,10 @@ int av_application_alloc(AVApplicationContext **ph, void *opaque)
             return AVERROR(ENOMEM);
         }
         
+        h->uss_default_segment->qrls = av_mallocz(sizeof(QUICRequestLogStatus));
+        if (!h->uss_default_segment->qrls){
+            return AVERROR(ENOMEM);
+        }
     }
     
     h->uss_alt_segment=av_mallocz(sizeof(URLStartStatus));
@@ -120,6 +133,11 @@ int av_application_alloc(AVApplicationContext **ph, void *opaque)
         h->uss_alt_segment->path_type = PATH_TS;
         h->uss_alt_segment->fls = av_mallocz(sizeof(FlowLogStatus));
         if (!h->uss_alt_segment->fls){
+            return AVERROR(ENOMEM);
+        }
+        
+        h->uss_alt_segment->qrls = av_mallocz(sizeof(QUICRequestLogStatus));
+        if (!h->uss_alt_segment->qrls){
             return AVERROR(ENOMEM);
         }
     }
@@ -189,6 +207,9 @@ void av_application_close(AVApplicationContext *h)
 		if(h->uss_default->fls)
 			av_free(h->uss_default->fls);
 			
+        if(h->uss_default->qrls)
+            av_free(h->uss_default->qrls);
+        
         av_free(h->uss_default);
     }
 	
@@ -196,6 +217,10 @@ void av_application_close(AVApplicationContext *h)
     {
 		if(h->uss_alt->fls)
 			av_free(h->uss_alt->fls);
+        
+        if(h->uss_alt->qrls)
+            av_free(h->uss_alt->qrls);
+        
         av_free(h->uss_alt);
     }
 	
@@ -203,6 +228,9 @@ void av_application_close(AVApplicationContext *h)
     {
         if(h->uss_default_segment->fls)
             av_free(h->uss_default_segment->fls);
+        
+        if(h->uss_default_segment->qrls)
+            av_free(h->uss_default_segment->qrls);
             
         av_free(h->uss_default_segment);
     }
@@ -211,6 +239,10 @@ void av_application_close(AVApplicationContext *h)
     {
         if(h->uss_alt_segment->fls)
             av_free(h->uss_alt_segment->fls);
+        
+        if(h->uss_alt_segment->qrls)
+            av_free(h->uss_alt_segment->qrls);
+        
         av_free(h->uss_alt_segment);
     }
     
@@ -462,4 +494,56 @@ void av_application_did_parse_audio_tracks(AVApplicationContext *h, const char* 
 
     if (h && h->func_on_app_event)
         h->func_on_app_event(h, AVAPP_EVENT_DID_PARSE_AUDIO_TRAKCS, (void *)&event, sizeof(AVAppAudioTrackEvent));
+}
+void av_application_on_quic_event(AVApplicationContext *h, int event_type, AVAppQUICEvent *event)
+{
+    if (h && h->func_on_app_event)
+        h->func_on_app_event(h, event_type, (void *)event, sizeof(AVAppQUICEvent));
+}
+
+void av_application_on_quic_request(AVApplicationContext *h, const char *url){
+    AVAppQUICEvent event = {0};
+    if (!h || !url)
+        return;
+    
+    event.obj = NULL;
+    av_strlcpy(event.url, url, sizeof(event.url));
+    av_application_on_quic_event(h, AVAPP_EVENT_DID_QUIC_REQUST, &event);
+}
+
+void av_application_on_quic_response(AVApplicationContext *h, const char *url, const char* proto, int http_code){
+    AVAppQUICEvent event = {0};
+    if (!h || !url || !proto)
+        return;
+    
+    event.obj = NULL;
+    event.http_code = http_code;
+    av_strlcpy(event.url, url, sizeof(event.url));
+    av_strlcpy(event.proto, proto, sizeof(event.proto));
+    av_application_on_quic_event(h, AVAPP_EVENT_DID_QUIC_RESPONSE, &event);
+}
+
+void av_application_did_quic_stats(AVApplicationContext *h, int is_reused)
+{
+    AVAppQUICEvent event = {0};
+
+    if (!h)
+        return;
+
+    event.obj = NULL;
+    event.is_reused = is_reused;
+
+    av_application_on_quic_event(h, AVAPP_EVENT_DID_QUIC_STATS, &event);
+}
+
+void av_application_did_quic_request_stats(AVApplicationContext *h, int quic_status, const char *quic_request_stats)
+{
+    AVAppQUICEvent event = {0};
+    if (!h || !quic_request_stats)
+        return;
+    
+    event.obj = NULL;
+    event.quic_status = quic_status;
+    av_strlcpy(event.quic_request_stats, quic_request_stats, sizeof(event.quic_request_stats));
+    av_application_on_quic_event(h, AVAPP_EVENT_DID_QUIC_REQUEST_STATS, &event);
 }
