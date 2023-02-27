@@ -222,6 +222,7 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
                           const char *filename, void *logctx,
                           unsigned int offset, unsigned int max_probe_size)
 {
+    uint64_t timebegin = av_gettime();
     AVProbeData pd = { filename ? filename : "" };
     uint8_t *buf = NULL;
     int ret = 0, probe_size, buf_offset = 0;
@@ -246,6 +247,10 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
         if (semi) {
             *semi = '\0';
         }
+    }
+    if (pb->customkey_alg){
+        pd.customkey_alg = av_strdup(pb->customkey_alg);
+        pd.customkey_src = av_strdup(pb->customkey_src);
     }
 #if 0
     if (!*fmt && pb->av_class && av_opt_get(pb, "mime_type", AV_OPT_SEARCH_CHILDREN, &mime_type) >= 0 && mime_type) {
@@ -308,6 +313,8 @@ fail:
         ret = ret2;
 
     av_freep(&pd.mime_type);
+    av_freep(&pd.customkey_alg);
+    av_freep(&pd.customkey_src);
     return ret < 0 ? ret : score;
 }
 

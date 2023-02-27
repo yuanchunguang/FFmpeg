@@ -1257,6 +1257,7 @@ attribute_deprecated
 AVRational av_stream_get_r_frame_rate(const AVStream *s);
 attribute_deprecated
 void       av_stream_set_r_frame_rate(AVStream *s, AVRational r);
+struct AVCodecParserContext *av_stream_get_parser(const AVStream *s);
 #if FF_API_LAVF_FFSERVER
 attribute_deprecated
 char* av_stream_get_recommended_encoder_configuration(const AVStream *s);
@@ -3049,6 +3050,20 @@ int avformat_match_stream_specifier(AVFormatContext *s, AVStream *st,
 
 int avformat_queue_attached_pictures(AVFormatContext *s);
 
+ * Wrap an existing array as stream side data.
+ *
+ * @param st stream
+ * @param type side information type
+ * @param data the side data array. It must be allocated with the av_malloc()
+ *             family of functions. The ownership of the data is transferred to
+ *             st.
+ * @param size side information size
+ * @return zero on success, a negative AVERROR code on failure. On failure,
+ *         the stream is unchanged and the data remains owned by the caller.
+ */
+int av_stream_add_side_data(AVStream *st, enum AVPacketSideDataType type,
+                            uint8_t *data, size_t size);
+
 #if FF_API_OLD_BSF
 /**
  * Apply a list of bitstream filters to a packet.
@@ -3133,4 +3148,49 @@ AVRational av_stream_get_codec_timebase(const AVStream *st);
 #define ERROR_MP4_HTTP_OPEN_FAIL         5004
 #define ERROR_MP4_HTTP_RESPONSE_FAIL     5005
 
+//HTTP3
+//M3U8
+#define ERROR_M3U8_HTTP3_DNS_FAIL                   11001
+#define ERROR_M3U8_HTTP3_TRANSPORT_CONNECT_FAIL     11002
+#define ERROR_M3U8_HTTP3_SERUCRIT_CONNECT_FAIL      11003
+#define ERROR_M3U8_HTTP3_SEND_FAIL                  11004
+#define ERROR_M3U8_HTTP3_OPEN_FAIL                  11005
+#define ERROR_M3U8_HTTP3_RESPONSE_FAIL              11006
+#define ERROR_M3U8_HTTP3_FAIL                       11100
+
+//TS
+#define ERROR_TS_HTTP3_DNS_FAIL                   12001
+#define ERROR_TS_HTTP3_TRANSPORT_CONNECT_FAIL     12002
+#define ERROR_TS_HTTP3_SERUCRIT_CONNECT_FAIL      12003
+#define ERROR_TS_HTTP3_SEND_FAIL                  12004
+#define ERROR_TS_HTTP3_OPEN_FAIL                  12005
+#define ERROR_TS_HTTP3_RESPONSE_FAIL              12006
+#define ERROR_TS_HTTP3_FAIL                       12100
+
+//KEY
+#define ERROR_KEY_HTTP3_DNS_FAIL                   13001
+#define ERROR_KEY_HTTP3_TRANSPORT_CONNECT_FAIL     13002
+#define ERROR_KEY_HTTP3_SERUCRIT_CONNECT_FAIL      13003
+#define ERROR_KEY_HTTP3_SEND_FAIL                  13004
+#define ERROR_KEY_HTTP3_OPEN_FAIL                  13005
+#define ERROR_KEY_HTTP3_RESPONSE_FAIL              13006
+#define ERROR_KEY_HTTP3_FAIL                       13100
+
+//REDIRECTED_M3U8
+#define ERROR_REDIRECTED_M3U8_HTTP3_DNS_FAIL                   14001
+#define ERROR_REDIRECTED_M3U8_HTTP3_TRANSPORT_CONNECT_FAIL     14002
+#define ERROR_REDIRECTED_M3U8_HTTP3_SERUCRIT_CONNECT_FAIL      14003
+#define ERROR_REDIRECTED_M3U8_HTTP3_SEND_FAIL                  14004
+#define ERROR_REDIRECTED_M3U8_HTTP3_OPEN_FAIL                  14005
+#define ERROR_REDIRECTED_M3U8_HTTP3_RESPONSE_FAIL              14006
+#define ERROR_REDIRECTED_M3U8_HTTP3_FAIL                       14100
+
+//MP4
+#define ERROR_MP4_HTTP3_DNS_FAIL                   15001
+#define ERROR_MP4_HTTP3_TRANSPORT_CONNECT_FAIL     15002
+#define ERROR_MP4_HTTP3_SERUCRIT_CONNECT_FAIL      15003
+#define ERROR_MP4_HTTP3_SEND_FAIL                  15004
+#define ERROR_MP4_HTTP3_OPEN_FAIL                  15005
+#define ERROR_MP4_HTTP3_RESPONSE_FAIL              15006
+#define ERROR_MP4_HTTP3_FAIL                       15100
 #endif /* AVFORMAT_AVFORMAT_H */

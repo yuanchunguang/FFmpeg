@@ -1518,14 +1518,28 @@ static int http_read_header(URLContext *h, int *new_location)
 #endif
 
     for (;;) {
-        if ((err = http_get_line(s, line, sizeof(line))) < 0)
+   if ((err = http_get_line(s, line, sizeof(line))) < 0){
+            char err_reason[256] = {0};
+            char* errbuf_ptr = err_reason;
+            if(av_strerror( err, errbuf_ptr, sizeof(err_reason))<0){
+                errbuf_ptr = strerror(AVUNERROR(err));
+            }
+            av_log(s,AV_LOG_ERROR,"iotrace: fail to http get line, ret=%d, err=%s\n", err, errbuf_ptr);
             return err;
+        }
 
-        av_log(h, AV_LOG_TRACE, "header='%s'\n", line);
+        av_log(h, AV_LOG_DEBUG, "header='%s'\n", line);
 
         err = process_line(h, line, s->line_count, new_location);
-        if (err < 0)
+        if (err < 0){
+            char err_reason[256] = {0};
+            char* errbuf_ptr = err_reason;
+            if(av_strerror( err, errbuf_ptr, sizeof(err_reason))<0){
+                errbuf_ptr = strerror(AVUNERROR(err));
+            }
+            av_log(s,AV_LOG_ERROR,"fail to http process line, ret=%d, err=%s\n", err, errbuf_ptr);
             return err;
+        }
         if (err == 0)
             break;
         s->line_count++;

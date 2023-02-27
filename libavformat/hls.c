@@ -1697,7 +1697,7 @@ static int parse_playlist(HLSContext *c, const char *url,
                 dynarray_add(&pls->segments, &pls->n_segments, seg);
                 //backup the segment because we will copy it to the playlist which is using. If not, the original segment will be missing.
           
-                if(c->app_ctx->adaptive_bitrate_switching)
+                if(c->app_ctx && c->app_ctx->adaptive_bitrate_switching)
                 {
                 	struct segment *original_seg = clone_segment(seg);
                 	if( original_seg )
