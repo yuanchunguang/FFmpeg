@@ -3050,7 +3050,7 @@ int avformat_match_stream_specifier(AVFormatContext *s, AVStream *st,
 
 int avformat_queue_attached_pictures(AVFormatContext *s);
 
- * Wrap an existing array as stream side data.
+ /* Wrap an existing array as stream side data.
  *
  * @param st stream
  * @param type side information type

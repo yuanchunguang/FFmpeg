@@ -222,7 +222,6 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
                           const char *filename, void *logctx,
                           unsigned int offset, unsigned int max_probe_size)
 {
-    uint64_t timebegin = av_gettime();
     AVProbeData pd = { filename ? filename : "" };
     uint8_t *buf = NULL;
     int ret = 0, probe_size, buf_offset = 0;

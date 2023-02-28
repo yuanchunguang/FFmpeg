@@ -482,7 +482,7 @@ static int tcp_open_use_pre_dns(URLContext *h, const char *uri, int flags)
     int ret;
     char hostname[1024],proto[1024],path[1024];
     char portstr[10];
-	int usePreDns = 1; //zy add
+	int usePreDns = 1; 
     //s->open_timeout = 5000000;
     s->app_ctx = (AVApplicationContext *)(intptr_t)s->app_ctx_intptr;
 	s->url_start_status = (URLStartStatus *)(intptr_t)s->url_start_status_intptr;
