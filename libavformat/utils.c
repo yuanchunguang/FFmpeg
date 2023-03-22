@@ -611,16 +611,16 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
     //MP4 is for video advertisement.
 	if (s->app_ctx && (!s->app_ctx->pss->m3u8_complete)) {
 		if (av_match_ext(filename, FILE_EXT_MP4)) {
-			startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN,"download_mp4_begin = %lld", av_gettime() / 1000);
+			ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_mp4_begin = %lld", av_gettime() / 1000);
 		} else if (av_match_ext(filename, FILE_EXT_M3U8) && s->app_ctx->pss->media_type != AV_SEPARATE ) {
-			startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_begin = %lld", av_gettime() / 1000);
+			ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_begin = %lld", av_gettime() / 1000);
 		}
 	}
     if (s->app_ctx
         && (!s->app_ctx->pss->master_m3u8_complete)
         && s->app_ctx->pss->media_type == AV_SEPARATE
         && av_strnstr(filename, ".m3u8", strlen(filename)) ){
-        startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_begin_master = %lld", av_gettime() / 1000);
+        ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_begin_master = %lld", av_gettime() / 1000);
     }
     //////////////////////////////////////////////////////////
 
@@ -637,10 +637,10 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
 
 	if (s->app_ctx && (!s->app_ctx->pss->m3u8_complete)) {
 		if (av_match_ext(filename, FILE_EXT_MP4)) {
-			startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN,"download_mp4_finish = %lld", av_gettime() / 1000);
+			ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_mp4_finish = %lld", av_gettime() / 1000);
             s->app_ctx->pss->m3u8_complete = 1;
 		} else if (av_match_ext(filename, FILE_EXT_M3U8)  && s->app_ctx->pss->media_type != AV_SEPARATE ) {
-			startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_finish = %lld", av_gettime() / 1000);
+			ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_finish = %lld", av_gettime() / 1000);
             s->app_ctx->pss->m3u8_complete = 1;
 		}
 	}
@@ -648,7 +648,7 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
         && (!s->app_ctx->pss->master_m3u8_complete)
         && s->app_ctx->pss->media_type == AV_SEPARATE
         && av_strnstr(filename, ".m3u8", strlen(filename)) ) {
-        startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_finish_master = %lld", av_gettime() / 1000);   
+        ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_finish_master = %lld", av_gettime() / 1000);   
         s->app_ctx->pss->master_m3u8_complete = 1;
         char *str = NULL;
         if( av_opt_get(s->pb, "timeout", AV_OPT_SEARCH_CHILDREN | AV_OPT_ALLOW_NULL, &str) < 0 )
@@ -3695,7 +3695,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
 {
     int64_t time_begin = av_gettime();
     if(ic->app_ctx && ic->app_ctx->lss->find_stream_info){
-        startimes_start_log(ic->app_ctx, STAR_TIME_LOG_MAIN, "find_stream_info_begin = %lld",time_begin/1000);
+        ffPlayer_start_log(ic->app_ctx, FFPLAYER_TIME_LOG_MAIN, "find_stream_info_begin = %lld",time_begin/1000);
     }
     
     int framecount = 0;
@@ -4391,7 +4391,7 @@ find_stream_info_err:
         av_log(ic, AV_LOG_DEBUG, "After avformat_find_stream_info() pos: %"PRId64" bytes read:%"PRId64" seeks:%d frames:%d, elapse time=%lld\n",
                avio_tell(ic->pb), ic->pb->bytes_read, ic->pb->seek_count, count, (time_end-time_begin)/1000);
         if (ic->app_ctx && ic->app_ctx->lss->find_stream_info) {
-            startimes_start_log(ic->app_ctx, STAR_TIME_LOG_MAIN, "find_stream_info_finish = %lld",time_end/1000);
+            ffPlayer_start_log(ic->app_ctx, FFPLAYER_TIME_LOG_MAIN, "find_stream_info_finish = %lld",time_end/1000);
         }
     }
     if(ic->app_ctx)
@@ -4624,68 +4624,79 @@ void ff_free_stream(AVFormatContext *s, AVStream *st)
 void avformat_free_context(AVFormatContext *s)
 {
     int i;
-
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 1);
     if (!s)
         return;
 
     av_opt_free(s);
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 2);
     if (s->iformat && s->iformat->priv_class && s->priv_data)
         av_opt_free(s->priv_data);
     if (s->oformat && s->oformat->priv_class && s->priv_data)
         av_opt_free(s->priv_data);
-
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n",3);
     for (i = s->nb_streams - 1; i >= 0; i--)
         ff_free_stream(s, s->streams[i]);
 
-
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 4);
     for (i = s->nb_programs - 1; i >= 0; i--) {
         av_dict_free(&s->programs[i]->metadata);
         av_freep(&s->programs[i]->stream_index);
         av_freep(&s->programs[i]);
     }
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 5);
     av_freep(&s->programs);
     av_freep(&s->priv_data);
     while (s->nb_chapters--) {
         av_dict_free(&s->chapters[s->nb_chapters]->metadata);
         av_freep(&s->chapters[s->nb_chapters]);
     }
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 6);
     av_freep(&s->chapters);
+		av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d p1=%p;p2=%p \n", 61,(void*)s->metadata,s->internal->id3v2_meta);
     av_dict_free(&s->metadata);
     av_dict_free(&s->internal->id3v2_meta);
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d p1=%p;p2=%p \n", 62,(void*)s->streams,s->internal);
     av_freep(&s->streams);
     av_freep(&s->internal);
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d p1=%p \n", 63,(void*)s);
     flush_packet_queue(s);
     av_freep(&s->internal);
-    av_freep(&s->url);
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d p1=%p \n", 64,(void*)s->url);
+    //av_freep(&s->url);
+    //av_free(s->url);
     av_free(s);
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 7);
 }
 
 void avformat_close_input(AVFormatContext **ps)
 {
+	av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 1);
     AVFormatContext *s;
     AVIOContext *pb;
 
     if (!ps || !*ps)
         return;
-
+		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 2);
     s  = *ps;
     pb = s->pb;
 
     if ((s->iformat && strcmp(s->iformat->name, "image2") && s->iformat->flags & AVFMT_NOFILE) ||
         (s->flags & AVFMT_FLAG_CUSTOM_IO))
         pb = NULL;
-
+		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 3);
     flush_packet_queue(s);
-
+		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 4);
     if (s->iformat)
         if (s->iformat->read_close)
             s->iformat->read_close(s);
-
+		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 5);
     avformat_free_context(s);
-
+		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 6);
     *ps = NULL;
 
     avio_close(pb);
+		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 7);
 }
 
 AVStream *avformat_new_stream(AVFormatContext *s, const AVCodec *c)

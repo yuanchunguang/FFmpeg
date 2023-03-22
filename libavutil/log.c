@@ -383,7 +383,7 @@ void av_log(void* avcl, int level, const char *fmt, ...)
     va_end(vl);
 }
 //APP to do
-void startimes_error_log(void* app_ctx, int level, const char *fmt, ...)
+void ffPlayer_error_log(void* app_ctx, int level, const char *fmt, ...)
 {
     /*AVClass* avc = avcl ? *(AVClass **) avcl : NULL;
     va_list vl;
@@ -392,7 +392,7 @@ void startimes_error_log(void* app_ctx, int level, const char *fmt, ...)
     if (avc && avc->version >= (50 << 16 | 15 << 8 | 2) &&
         avc->log_level_offset_offset && av_level >= AV_LOG_FATAL)
         av_level += *(int *) (((uint8_t *) avcl) + avc->log_level_offset_offset);*/
-//    char new_string[1024]="STAR_START_ERROR_LOG:";
+//    char new_string[1024]="FFPLAYER_START_ERROR_LOG:";
 //    switch(level){
 //    case 0:
 //    	strcat(new_string,"0");
@@ -407,7 +407,7 @@ void startimes_error_log(void* app_ctx, int level, const char *fmt, ...)
     va_start(vl, fmt);
     
     char new_string[LINE_SZ]={0};
-    sprintf( new_string, "STAR_START_ERROR_LOG:%d", level);
+    sprintf( new_string, "FFPLAYER_START_ERROR_LOG:%d", level);
     
     char count_string[32]={0};
     //sprintf(count_string,":%d:",ctx->lss->start_error_log_count);
@@ -415,13 +415,13 @@ void startimes_error_log(void* app_ctx, int level, const char *fmt, ...)
     strcat(new_string,count_string);
     //ctx->lss->start_error_log_count++;
     strcat(new_string,fmt);
-    star_vlog(app_ctx, av_level, new_string, vl);
+    ffPlayer_vlog(app_ctx, av_level, new_string, vl);
     va_end(vl);
 }
 
-void startimes_start_log(void* app_ctx, int level, const char *fmt, ...)
+void ffPlayer_start_log(void* app_ctx, int level, const char *fmt, ...)
 {
-	//startimes_error_log(avcl, level, fmt, ...);
+	//ffPlayer_error_log(avcl, level, fmt, ...);
     /*AVClass* avc = avcl ? *(AVClass **) avcl : NULL;
     va_list vl;
     int av_level=AV_LOG_INFO;
@@ -429,7 +429,7 @@ void startimes_start_log(void* app_ctx, int level, const char *fmt, ...)
     if (avc && avc->version >= (50 << 16 | 15 << 8 | 2) &&
         avc->log_level_offset_offset && av_level >= AV_LOG_FATAL)
         av_level += *(int *) (((uint8_t *) avcl) + avc->log_level_offset_offset);*/
-//    char new_string[1024]="STAR_START_TIME_LOG:";
+//    char new_string[1024]="FFPLAYER_START_TIME_LOG:";
 //    switch(level){
 //    case 0:
 //    	strcat(new_string,"0");
@@ -443,19 +443,19 @@ void startimes_start_log(void* app_ctx, int level, const char *fmt, ...)
     int av_level=AV_LOG_INFO;
     va_start(vl, fmt);
     char new_string[LINE_SZ]={0};
-    sprintf( new_string, "STAR_START_TIME_LOG:%d", level);
+    sprintf( new_string, "FFPLAYER_START_TIME_LOG:%d", level);
     char count_string[32]={0};
     //sprintf(count_string,":%d:",ctx->lss->start_time_log_count);
     strcat(new_string,":0:");
     //ctx->lss->start_time_log_count++;
     strcat(new_string,fmt);
-    star_vlog(app_ctx, av_level, new_string, vl);
+    ffPlayer_vlog(app_ctx, av_level, new_string, vl);
     va_end(vl);
 }
 
-void startimes_play_log(void* app_ctx, int level, const char*tag, const char *fmt, ...)
+void ffPlayer_play_log(void* app_ctx, int level, const char*tag, const char *fmt, ...)
 {
-    //startimes_error_log(avcl, level, fmt, ...);
+    //ffPlayer_error_log(avcl, level, fmt, ...);
     /*AVClass* avc = avcl ? *(AVClass **) avcl : NULL;
     va_list vl;
     int av_level=AV_LOG_INFO;
@@ -467,8 +467,8 @@ void startimes_play_log(void* app_ctx, int level, const char*tag, const char *fm
     int av_level=AV_LOG_INFO;
     va_start(vl, fmt);
     
-    if (level == STAR_TIME_LOG_FLOW_LOG) {
-        star_vlog(app_ctx, av_level, fmt, vl);
+    if (level == FFPLAYER_TIME_LOG_FLOW_LOG) {
+        ffPlayer_vlog(app_ctx, av_level, fmt, vl);
         va_end(vl);
     }
     else
@@ -476,7 +476,7 @@ void startimes_play_log(void* app_ctx, int level, const char*tag, const char *fm
         char new_string[LINE_SZ]={0};
         sprintf( new_string, "%s:%d:", tag, level);
         strcat(new_string,fmt);
-        star_vlog(app_ctx, av_level, new_string, vl);
+        ffPlayer_vlog(app_ctx, av_level, new_string, vl);
         va_end(vl);
     }
 }
@@ -490,7 +490,7 @@ void av_vlog(void* avcl, int level, const char *fmt, va_list vl)
         log_callback(avcl, level, fmt, vl);
 }
 //APP to do
-void star_vlog(void* app_ctx, int level, const char *fmt, va_list vl)
+void ffPlayer_vlog(void* app_ctx, int level, const char *fmt, va_list vl)
 {
     void (*log_callback)(void*, int, const char*, va_list) = star_log_callback;
     if (log_callback)
@@ -522,7 +522,7 @@ void av_log_set_callback(void (*callback)(void*, int, const char*, va_list))
     av_log_callback = callback;
 }
 //APP to do
-void star_log_set_callback(void (*callback)(void*, int, const char*, va_list))
+void ffPlayer_log_set_callback(void (*callback)(void*, int, const char*, va_list))
 {
     star_log_callback = callback;
 }
@@ -680,7 +680,7 @@ void add_flow_log(void *app_ctx, void *uss, enum FLOW_LOG type, int64_t data)
             {
                 //av_log(NULL, AV_LOG_INFO,"PLAY_FLOW_LOG:%s\n",pfls->flow_log_info);
                 pfls->flow_log_need_send=0;
-                startimes_play_log(app_ctx,STAR_TIME_LOG_FLOW_LOG,LOG_TAG_PLAY_FLOW_LOG,"PLAY_FLOW_LOG=%s",pfls->flow_log_info);
+                ffPlayer_play_log(app_ctx,FFPLAYER_TIME_LOG_FLOW_LOG,LOG_TAG_PLAY_FLOW_LOG,"PLAY_FLOW_LOG=%s",pfls->flow_log_info);
             }
             break;
         case FL_HTTP_RESPONSE_CODE:
@@ -747,7 +747,7 @@ void add_tcp_rwtimeout_log_end(void *app_ctx, void *uss, const char* key, int64_
     char result[512]={0};
     snprintf(ctemp, sizeof(ctemp), "\"%s\":%lld",key, value);
     snprintf(result, sizeof(result), "%s,%s", pfls->tcp_rwtimeout_log, ctemp);
-    startimes_play_log(ctx, STAR_TIME_LOG_TCP, LOG_TAG_TCP_RWTIMEOUT, "%s", result);
+    ffPlayer_play_log(ctx, FFPLAYER_TIME_LOG_TCP, LOG_TAG_TCP_RWTIMEOUT, "%s", result);
 }
 
 void init_tcp_connection_logs(void *app_ctx, void *uss){

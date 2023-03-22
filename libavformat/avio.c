@@ -377,7 +377,7 @@ static void parse_av_split_info(AVApplicationContext *app_ctx, URLContext *h){
 	if(out_info)
 		av_free(out_info);
 	
-	startimes_start_log(app_ctx, STAR_TIME_LOG_MAIN, "parse_av_split_info_success = %d", parse_av_split_info_success);
+	ffPlayer_start_log(app_ctx, FFPLAYER_TIME_LOG_MAIN, "parse_av_split_info_success = %d", parse_av_split_info_success);
 }
 
 int ffurl_open_whitelist(URLContext **puc, const char *filename, int flags,

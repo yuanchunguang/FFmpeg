@@ -82,7 +82,7 @@
 #define LP_VALUE_MAX_LEN            512
 
 //for save hls fmp4 init.mp4
-#define MAX_STAR_INIT_DATA  20480
+#define MAX_FFPLAYER_INIT_DATA  20480
 
 #define MIN_SLEEP_INTETVAL   100000   //100ms
 
@@ -138,7 +138,7 @@ enum KeyType {
     KEY_NONE,
     KEY_AES_128,
     KEY_SAMPLE_AES,
-    KEY_STAR_CRYPT
+    KEY_FFPLAYER_CRYPT
 };
 
 struct segment {
@@ -149,7 +149,7 @@ struct segment {
     int64_t size;
     char *url;
     char *key;          //section key
-	char *star_init_data;
+	char *ffPlayer_init_data;
     enum KeyType key_type;
     uint8_t iv[16];
     char* key_src;      //key src to get starkey
@@ -327,7 +327,7 @@ static void free_segment_list(struct playlist *pls)
     for (i = 0; i < pls->n_segments; i++) {
         av_freep(&pls->segments[i]->key);
         av_freep(&pls->segments[i]->url);
-		av_freep(&pls->segments[i]->star_init_data);
+		av_freep(&pls->segments[i]->ffPlayer_init_data);
         av_freep(&pls->segments[i]->key_src);
         av_freep(&pls->segments[i]->key_initsec);
         av_freep(&pls->segments[i]);
@@ -346,7 +346,7 @@ static void free_original_segment_list(struct playlist *pls)
     for (i = 0; i < pls->original_n_segments; i++) {
         av_freep(&pls->original_segments[i]->key);
         av_freep(&pls->original_segments[i]->url);
-		av_freep(&pls->original_segments[i]->star_init_data);
+		av_freep(&pls->original_segments[i]->ffPlayer_init_data);
         av_freep(&pls->segments[i]->key_src);
         av_freep(&pls->segments[i]->key_initsec);
         av_freep(&pls->original_segments[i]);
@@ -359,7 +359,7 @@ static void free_init_section_list(struct playlist *pls)
     int i;
     for (i = 0; i < pls->n_init_sections; i++) {
         av_freep(&pls->init_sections[i]->url);
-		av_freep(&pls->init_sections[i]->star_init_data);
+		av_freep(&pls->init_sections[i]->ffPlayer_init_data);
         av_freep(&pls->init_sections[i]->key_src);
         av_freep(&pls->init_sections[i]->key_initsec);
         av_freep(&pls->init_sections[i]);
@@ -512,9 +512,9 @@ struct key_info {
      char iv[35];
 };
 
-struct star_key_info {
-    char alg[MAX_URL_SIZE]; //algorithm type; such as: "TypeA://X/Y:4"
-    char src[MAX_URL_SIZE]; //src for get star keys
+struct ffPlayer_key_info {
+    char alg[MAX_URL_SIZE]; 
+    char src[MAX_URL_SIZE]; 
 };
 
 static void handle_key_args(struct key_info *info, const char *key,
@@ -532,7 +532,7 @@ static void handle_key_args(struct key_info *info, const char *key,
     }
 }
 
-static void handle_starkey_args(struct star_key_info *info, const char *key,
+static void handle_starkey_args(struct ffPlayer_key_info *info, const char *key,
                             int key_len, char **dest, int *dest_len)
 {
     if (!strncmp(key, "ALG=", key_len)) {
@@ -941,7 +941,7 @@ static int combine_chomp_line(HLSContext *c, struct playlist *pls, char *buf, in
 struct init_section_info {
     char uri[MAX_URL_SIZE];
     char byterange[32];
-	char star_init_data[MAX_STAR_INIT_DATA];
+	char ffPlayer_init_data[MAX_FFPLAYER_INIT_DATA];
     char alg[MAX_URL_SIZE];
 };
 
@@ -969,10 +969,10 @@ static struct segment *new_init_section(struct playlist *pls,
     }
 
 	
-	if (info->star_init_data[0])
-		sec->star_init_data = av_strdup(info->star_init_data);
+	if (info->ffPlayer_init_data[0])
+		sec->ffPlayer_init_data = av_strdup(info->ffPlayer_init_data);
 	else
-		sec->star_init_data = NULL;
+		sec->ffPlayer_init_data = NULL;
     
     
     if (info->alg[0]) {
@@ -1007,9 +1007,9 @@ static void handle_init_section_args(struct init_section_info *info, const char 
     } else if (!strncmp(key, "BYTERANGE=", key_len)) {
         *dest     =        info->byterange;
         *dest_len = sizeof(info->byterange);
-	} else if (!strncmp(key, "STAR-INIT-DATA=", key_len)) {
-		*dest     =        info->star_init_data;
-		*dest_len = sizeof(info->star_init_data);
+	} else if (!strncmp(key, "FFPLAYER-INIT-DATA=", key_len)) {
+		*dest     =        info->ffPlayer_init_data;
+		*dest_len = sizeof(info->ffPlayer_init_data);
     } else if (!strncmp(key, "ALG=", key_len)) {
         *dest     =        info->alg;
         *dest_len = sizeof(info->alg);
@@ -1279,7 +1279,7 @@ static struct segment *clone_segment(struct segment *_seg)
 
 	seg->url = av_strdup(_seg->url);
 	seg->key = av_strdup(_seg->key);
-	seg->star_init_data = av_strdup(_seg->star_init_data);
+	seg->ffPlayer_init_data = av_strdup(_seg->ffPlayer_init_data);
 
 	return seg;
 }
@@ -1533,11 +1533,11 @@ static int parse_playlist(HLSContext *c, const char *url,
             }
             av_strlcpy(key, info.uri, sizeof(key));
         }else if (av_strstart(line, "#EXT-X-STARK:", &ptr)) {
-            struct star_key_info info = {{0}};
+            struct ffPlayer_key_info info = {{0}};
             ff_parse_key_value(ptr, (ff_parse_key_val_cb)handle_starkey_args, &info);
             av_strlcpy(key, info.alg, sizeof(key));
             if (strlen(key)>0) {
-                key_type = KEY_STAR_CRYPT;
+                key_type = KEY_FFPLAYER_CRYPT;
             } else {
                 key_type = KEY_NONE;
             }
@@ -1578,7 +1578,7 @@ static int parse_playlist(HLSContext *c, const char *url,
             //live stream no need to update init section with same section data
             //such as go to see moov, update init secion with duplicated moov is useless
             if(pls->cur_init_section){
-                if (pls->cur_init_section->star_init_data && !strcmp(info.star_init_data, pls->cur_init_section->star_init_data)){
+                if (pls->cur_init_section->ffPlayer_init_data && !strcmp(info.ffPlayer_init_data, pls->cur_init_section->ffPlayer_init_data)){
                     if((pls->cur_init_section->key_initsec && !strcmp(info.alg, pls->cur_init_section->key_initsec))||
                        (pls->cur_init_section->key_initsec==NULL && !strlen(info.alg))){
                         av_log(NULL, AV_LOG_WARNING, "the same to current init section, no need to update_init_section\n");
@@ -1627,7 +1627,7 @@ static int parse_playlist(HLSContext *c, const char *url,
                     pls = c->playlists[c->n_playlists - 1];
                 }
                 seg = av_mallocz(sizeof(struct segment));
-				seg->star_init_data = NULL;
+				seg->ffPlayer_init_data = NULL;
                 if (!seg) {
                     ret = AVERROR(ENOMEM);
                     goto fail;
@@ -1646,7 +1646,7 @@ static int parse_playlist(HLSContext *c, const char *url,
                     AV_WB32(seg->iv + 12, seq);
                 }
                 if (key_type != KEY_NONE) {
-                    if (key_type==KEY_STAR_CRYPT) {
+                    if (key_type==KEY_FFPLAYER_CRYPT) {
                         seg->key = av_strdup(key);
                         seg->key_src = av_strdup(key_src);
                     }else{
@@ -2269,14 +2269,14 @@ static int open_input(HLSContext *c, struct playlist *pls, struct segment *seg)
 		if(c->app_ctx && (!c->app_ctx->pss->complete)){
 			if(c->parallel_open){
 				if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-					startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type = %d", DRM_NONE);
+					ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type = %d", DRM_NONE);
 				}
 				else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-					startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type_audio = %d", DRM_NONE);
+					ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type_audio = %d", DRM_NONE);
 				}
 			}
 			else{
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type = %d", DRM_NONE);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type = %d", DRM_NONE);
 			}
 		}
      
@@ -2291,14 +2291,14 @@ static int open_input(HLSContext *c, struct playlist *pls, struct segment *seg)
 				if(c->app_ctx && (!c->app_ctx->pss->complete)){
 					if(c->parallel_open){
 						if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-							startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type = %d", DRM_AES128);
+							ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type = %d", DRM_AES128);
 						}
 						else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-							startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type_audio = %d", DRM_AES128);
+							ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type_audio = %d", DRM_AES128);
 						}
 					}
 					else{
-						startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type = %d", DRM_AES128);
+						ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type = %d", DRM_AES128);
 					}
 				}
 				
@@ -2315,14 +2315,14 @@ static int open_input(HLSContext *c, struct playlist *pls, struct segment *seg)
 				if(c->app_ctx && (!c->app_ctx->pss->complete)){
 					if(c->parallel_open){
 						if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-							startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type = %d", DRM_STAR);
+							ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type = %d", DRM_STAR);
 						}
 						else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-							startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type_audio = %d", DRM_STAR);
+							ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type_audio = %d", DRM_STAR);
 						}
 					}
 					else{
-						startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type = %d", DRM_STAR);
+						ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type = %d", DRM_STAR);
 					}
 				}
 				
@@ -2370,17 +2370,17 @@ static int open_input(HLSContext *c, struct playlist *pls, struct segment *seg)
 					if (0!=key_error_code) {
                         if(c->parallel_open){
 							if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-								startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", key_error_code );
-								startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", ret );
+								ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", key_error_code );
+								ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", ret );
 							}
 							else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-								startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", key_error_code );
-								startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", ret );
+								ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", key_error_code );
+								ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", ret );
 							}
 						}
 						else{
-							startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", key_error_code );
-							startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", ret );
+							ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", key_error_code );
+							ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", ret );
 						}
                     }
 					ret = AVERROR_FAIL_ACCESS_AES_KEY;
@@ -2413,18 +2413,18 @@ static int open_input(HLSContext *c, struct playlist *pls, struct segment *seg)
         av_log(pls->parent, AV_LOG_ERROR,
                "SAMPLE-AES encryption is not supported yet\n");
         ret = AVERROR_PATCHWELCOME;
-    } else if (seg->key_type == KEY_STAR_CRYPT) {
+    } else if (seg->key_type == KEY_FFPLAYER_CRYPT) {
 		if(c->app_ctx && (!c->app_ctx->pss->complete)){
 			if(c->parallel_open){
 				if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-					startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type = %d", seg->key_type);
+					ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type = %d", seg->key_type);
 				}
 				else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-					startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type_audio = %d", seg->key_type);
+					ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type_audio = %d", seg->key_type);
 				}
 			}
 			else{
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "drm_type = %d", seg->key_type);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "drm_type = %d", seg->key_type);
 			}
 		}
 		
@@ -2493,17 +2493,17 @@ static int decrypt_init_section_data(struct playlist *pls, struct segment *seg){
             if(c->app_ctx && (!c->app_ctx->pss->complete)){
 				if(c->parallel_open){
 					if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-						startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_INIT_FAIL );
-						startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", ret );
+						ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_INIT_FAIL );
+						ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", ret );
 					}
 					else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-						startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_KEY_PARSE_INIT_FAIL );
-						startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", ret );
+						ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_KEY_PARSE_INIT_FAIL );
+						ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", ret );
 					}
 				}
 				else{
-					startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_INIT_FAIL );
-					startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", ret );
+					ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_INIT_FAIL );
+					ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", ret );
 				}
 			}
 			
@@ -2513,14 +2513,14 @@ static int decrypt_init_section_data(struct playlist *pls, struct segment *seg){
             if(c->app_ctx && (!c->app_ctx->pss->complete)){
 				if(c->parallel_open){
 					if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-						startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "star_init_drm = %d", opt.alg);
+						ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "star_init_drm = %d", opt.alg);
 					}
 					else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-						startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "star_init_drm_audio = %d", opt.alg);
+						ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "star_init_drm_audio = %d", opt.alg);
 					}
 				}
 				else{
-					startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "star_init_drm = %d", opt.alg);
+					ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "star_init_drm = %d", opt.alg);
 				}
 			}
 			
@@ -2536,21 +2536,21 @@ static int update_init_section_use_init_data(struct playlist *pls, struct segmen
 	if(c->app_ctx && (!c->app_ctx->pss->complete)){
 		if(c->parallel_open){
 			if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "star_init_optimize_begin = %lld",av_gettime()/1000);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "star_init_optimize_begin = %lld",av_gettime()/1000);
 			}
 			else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "star_init_optimize_begin_audio = %lld",av_gettime()/1000);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "star_init_optimize_begin_audio = %lld",av_gettime()/1000);
 			}
 		}
 		else{
-			startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "star_init_optimize_begin = %lld",av_gettime()/1000);
+			ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "star_init_optimize_begin = %lld",av_gettime()/1000);
 		}
 	}
     
-    av_log(NULL, AV_LOG_DEBUG, "star_init_optimize original:data=%s, ret=%d\n",seg->star_init_data,strlen(seg->star_init_data));
+    av_log(NULL, AV_LOG_DEBUG, "star_init_optimize original:data=%s, ret=%d\n",seg->ffPlayer_init_data,strlen(seg->ffPlayer_init_data));
 	
-    char base64_data[MAX_STAR_INIT_DATA] = {0};
-	int ret = av_base64_decode(base64_data,seg->star_init_data,sizeof(base64_data));
+    char base64_data[MAX_FFPLAYER_INIT_DATA] = {0};
+	int ret = av_base64_decode(base64_data,seg->ffPlayer_init_data,sizeof(base64_data));
 	if (ret<=0)
 	{
 		av_log(NULL, AV_LOG_ERROR, "star_init_optimize:fail to base64 decode init data, ret=%d\n", ret);
@@ -2567,9 +2567,9 @@ static int update_init_section_use_init_data(struct playlist *pls, struct segmen
     inflate_stream.next_in  = base64_data;
     inflate_stream.avail_in = ret;
     
-    pls->init_sec_buf = av_malloc(MAX_STAR_INIT_DATA);
+    pls->init_sec_buf = av_malloc(MAX_FFPLAYER_INIT_DATA);
     memset(pls->init_sec_buf, 0, sizeof(pls->init_sec_buf));
-    inflate_stream.avail_out = MAX_STAR_INIT_DATA;
+    inflate_stream.avail_out = MAX_FFPLAYER_INIT_DATA;
     inflate_stream.next_out  = pls->init_sec_buf;
     //av_log(NULL, AV_LOG_ERROR, "star_init_optimize:into inflateInit \n");
     ret = inflateInit(&inflate_stream);
@@ -2607,14 +2607,14 @@ static int update_init_section_use_init_data(struct playlist *pls, struct segmen
 	if(c->app_ctx && (!c->app_ctx->pss->complete)){
 		if(c->parallel_open){
 			if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "star_init_optimize_finish = %lld",av_gettime()/1000);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "star_init_optimize_finish = %lld",av_gettime()/1000);
 			}
 			else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "star_init_optimize_finish_audio = %lld",av_gettime()/1000);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "star_init_optimize_finish_audio = %lld",av_gettime()/1000);
 			}
 		}
 		else{
-			startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "star_init_optimize_finish = %lld",av_gettime()/1000);
+			ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "star_init_optimize_finish = %lld",av_gettime()/1000);
 		}
 	}
     
@@ -2641,7 +2641,7 @@ static int update_init_section(struct playlist *pls, struct segment *seg)
     if (!seg->init_section)
         return 0;
 	
-	if (seg->init_section->star_init_data)
+	if (seg->init_section->ffPlayer_init_data)
     {
 		ret = update_init_section_use_init_data(pls,seg->init_section);
 		av_log(NULL, AV_LOG_DEBUG, "star_init_optimize  update_init_section ret = %d, time=%lld\n", ret, av_gettime()/1000);
@@ -2863,10 +2863,10 @@ reload:
                         av_log(NULL, AV_LOG_DEBUG, "update bitrate playlist segment, cur=%s, better=%s\n", v->segments[i]->url, pls->original_segments[i]->url);
         				av_freep(&v->segments[i]->key);
         				av_freep(&v->segments[i]->url);
-						av_freep(&v->segments[i]->star_init_data);
+						av_freep(&v->segments[i]->ffPlayer_init_data);
         				v->segments[i]->url = av_strdup(pls->original_segments[i]->url);
         				v->segments[i]->key = av_strdup(pls->original_segments[i]->key);
-						v->segments[i]->star_init_data = av_strdup(pls->original_segments[i]->star_init_data);
+						v->segments[i]->ffPlayer_init_data = av_strdup(pls->original_segments[i]->ffPlayer_init_data);
                         
         			}
         		}
@@ -2884,16 +2884,16 @@ reload:
 		if(c->app_ctx && (!c->app_ctx->pss->complete)){
 			if(c->parallel_open){
 				if((!c->uss_default->complete) && v->_type == AVMEDIA_TYPE_VIDEO ){
-					startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "download_ts1_begin = %lld",av_gettime()/1000);
+					ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "download_ts1_begin = %lld",av_gettime()/1000);
 					c->app_ctx->lss->download_ts_data=0;
 				}
 				else if((!c->uss_alt->complete) && v->_type == AVMEDIA_TYPE_AUDIO){
-					startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "download_ts1_begin_audio = %lld",av_gettime()/1000);
+					ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "download_ts1_begin_audio = %lld",av_gettime()/1000);
 					c->app_ctx->lss->download_ts_data_audio = 0;
 				}
 			}
 			else{
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "download_ts1_begin = %lld",av_gettime()/1000);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "download_ts1_begin = %lld",av_gettime()/1000);
 				c->app_ctx->lss->download_ts_data=0;
 			}
 		}
@@ -2964,16 +2964,16 @@ reload:
 			if(c->parallel_open){
 				if((!c->uss_default->complete) && v->_type == AVMEDIA_TYPE_VIDEO ){
 					c->app_ctx->lss->download_ts_data += ret;
-					startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "download_ts1_data = %d", c->app_ctx->lss->download_ts_data);					
+					ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "download_ts1_data = %d", c->app_ctx->lss->download_ts_data);					
 				}
 				else if((!c->uss_alt->complete) && v->_type == AVMEDIA_TYPE_AUDIO){
 					c->app_ctx->lss->download_ts_data_audio += ret;
-					startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "download_ts1_data_audio = %d", c->app_ctx->lss->download_ts_data_audio);
+					ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "download_ts1_data_audio = %d", c->app_ctx->lss->download_ts_data_audio);
 				}
 			}
 			else{
 				c->app_ctx->lss->download_ts_data += ret;
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "download_ts1_data = %d", c->app_ctx->lss->download_ts_data);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "download_ts1_data = %d", c->app_ctx->lss->download_ts_data);
 			}
 			
 		}
@@ -3005,11 +3005,11 @@ reload:
 			}
 			
 			if((!c->uss_default->complete) && v->_type == AVMEDIA_TYPE_VIDEO ){
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "download_ts1_finish = %lld",av_gettime()/1000);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "download_ts1_finish = %lld",av_gettime()/1000);
 				c->uss_default->complete = 1;
 			}
 			else if((!c->uss_alt->complete) && v->_type == AVMEDIA_TYPE_AUDIO){
-				startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "download_ts1_finish_audio = %lld",av_gettime()/1000);
+				ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "download_ts1_finish_audio = %lld",av_gettime()/1000);
 				c->uss_alt->complete = 1;
 			}
 			
@@ -3018,7 +3018,7 @@ reload:
 			}			
 		}
 		else{
-			startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN, "download_ts1_finish = %lld",av_gettime()/1000);
+			ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "download_ts1_finish = %lld",av_gettime()/1000);
 			c->uss_default->complete = 1;
 			c->app_ctx->pss->complete=1;
 		}
@@ -3220,11 +3220,11 @@ static void *open_m3u8_threadproc(void* paramlist){
     struct HLSContext* c = (struct HLSContext*)pParamList[1];
     
     if (c->parallel_open && (!c->uss_default->m3u8_complete) && pls->_type == AVMEDIA_TYPE_VIDEO ) {
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_begin = %lld", av_gettime() / 1000);
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_begin = %lld", av_gettime() / 1000);
     }
     
     if (c->parallel_open && (!c->uss_alt->m3u8_complete) && pls->_type == AVMEDIA_TYPE_AUDIO ) {
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_begin_audio = %lld", av_gettime() / 1000);
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_begin_audio = %lld", av_gettime() / 1000);
     }
     
     int ret = parse_playlist(c, pls->url, pls, NULL);
@@ -3242,12 +3242,12 @@ static void *open_m3u8_threadproc(void* paramlist){
     }
 	
 	if (c->parallel_open && (!c->uss_default->m3u8_complete) && pls->_type == AVMEDIA_TYPE_VIDEO ) {
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_finish = %lld", av_gettime() / 1000);
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_finish = %lld", av_gettime() / 1000);
 		c->uss_default->m3u8_complete = 1;
     }
     
     if (c->app_ctx && (!c->uss_alt->m3u8_complete) && pls->_type == AVMEDIA_TYPE_AUDIO ) {
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN,"download_m3u8_finish_audio = %lld", av_gettime() / 1000);     
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_finish_audio = %lld", av_gettime() / 1000);     
 		c->uss_alt->m3u8_complete = 1;
     }
 
@@ -3313,7 +3313,7 @@ static void *open_demuxer_threadproc(void* paramlist){
          * context, so it doesn't need any special treatment like this. */
         //APP to do
         // TODO : loading first segment error code! add by tao
-        //startimes_error_log(NULL, STAR_LOG_MAIN, "error_code = %d download first ts failed",ret);
+        //ffPlayer_error_log(NULL, FFPLAYER_LOG_MAIN, "error_code = %d download first ts failed",ret);
         /////////////////////////
         av_log(s, AV_LOG_ERROR, "Error when loading first segment '%s'\n", pls->segments[0]->url);
         avformat_free_context(pls->ctx);
@@ -3323,17 +3323,17 @@ static void *open_demuxer_threadproc(void* paramlist){
 			ret = AVERROR_FAIL_UNSUPPORT_CRYPT_ALG;
 			if(c->parallel_open){
 				if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-					startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_STREAM_FAIL );
-					startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", check_key_ret );
+					ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_STREAM_FAIL );
+					ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", check_key_ret );
 				}
 				else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-					startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_KEY_PARSE_STREAM_FAIL );
-					startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", check_key_ret );
+					ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_KEY_PARSE_STREAM_FAIL );
+					ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", check_key_ret );
 				}
 			}
 			else{
-				startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_STREAM_FAIL );
-				startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", check_key_ret );
+				ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_STREAM_FAIL );
+				ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", check_key_ret );
 			}
 		}
         goto fail;
@@ -3364,23 +3364,23 @@ static void *open_demuxer_threadproc(void* paramlist){
     }
     
     if (c->app_ctx && pls->_type == AVMEDIA_TYPE_VIDEO ) {
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN,"find_stream_info_begin = %lld", av_gettime() / 1000);
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN,"find_stream_info_begin = %lld", av_gettime() / 1000);
         c->app_ctx->lss->find_stream_info=0;
     }
     
     if (c->app_ctx && pls->_type == AVMEDIA_TYPE_AUDIO ) {
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN,"find_stream_info_begin_audio = %lld", av_gettime() / 1000);
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN,"find_stream_info_begin_audio = %lld", av_gettime() / 1000);
         c->app_ctx->lss->find_stream_info=0;
     }
 
     ret = avformat_find_stream_info(pls->ctx, NULL);
     
     if (c->app_ctx && pls->_type == AVMEDIA_TYPE_VIDEO ) {
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN,"find_stream_info_finish = %lld", av_gettime() / 1000);
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN,"find_stream_info_finish = %lld", av_gettime() / 1000);
     }
     
     if (c->app_ctx && pls->_type == AVMEDIA_TYPE_AUDIO ) {
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_MAIN,"find_stream_info_finish_audio = %lld", av_gettime() / 1000);
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN,"find_stream_info_finish_audio = %lld", av_gettime() / 1000);
     }
     
     if (ret < 0)
@@ -3564,21 +3564,21 @@ static int hls_read_header(AVFormatContext *s)
         for (i = 0; i < c->n_playlists; i++) {
             struct playlist *pls = c->playlists[i];
             if (c->app_ctx && (!c->app_ctx->pss->complete) && pls->_type == AVMEDIA_TYPE_AUDIO  ) {
-                startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "m3u8_have_finish_audio = %d", pls->finished);
-                startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "m3u8_have_segcnt_audio = %d", pls->n_segments);
+                ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "m3u8_have_finish_audio = %d", pls->finished);
+                ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "m3u8_have_segcnt_audio = %d", pls->n_segments);
                 av_log(NULL, AV_LOG_DEBUG, "m3u8 read result: finish=%d, seg_count=%d\n", pls->finished, pls->n_segments);
             }
             
             if (c->app_ctx && (!c->app_ctx->pss->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ) {
-                startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "m3u8_have_finish = %d", pls->finished);
-                startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "m3u8_have_segcnt = %d", pls->n_segments);
+                ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "m3u8_have_finish = %d", pls->finished);
+                ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "m3u8_have_segcnt = %d", pls->n_segments);
                 av_log(NULL, AV_LOG_DEBUG, "m3u8 read result: finish=%d, seg_count=%d\n", pls->finished, pls->n_segments);
             }
         }
     }
     else if (c->app_ctx && (!c->app_ctx->pss->complete)) {
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "m3u8_have_finish = %d", c->variants[0]->playlists[0]->finished);
-        startimes_start_log(c->app_ctx, STAR_TIME_LOG_TCP, "m3u8_have_segcnt = %d", c->variants[0]->playlists[0]->n_segments);
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "m3u8_have_finish = %d", c->variants[0]->playlists[0]->finished);
+        ffPlayer_start_log(c->app_ctx, FFPLAYER_TIME_LOG_TCP, "m3u8_have_segcnt = %d", c->variants[0]->playlists[0]->n_segments);
         av_log(NULL, AV_LOG_DEBUG, "m3u8 read result: finish=%d, seg_count=%d\n", c->variants[0]->playlists[0]->finished, c->variants[0]->playlists[0]->n_segments);
     }
     
@@ -3594,17 +3594,7 @@ static int hls_read_header(AVFormatContext *s)
             add_renditions_to_variant(c, var, AVMEDIA_TYPE_SUBTITLE, var->subtitles_group);
     }
 
-    /* Open the demuxer for each playlist */
-//    //In order to star the play quickly, we only analyze the first ts segment of the first playlist.
-//    int n_playlists = 1;
-//    if( global_adaptive_bitrate_switching && c->n_variants > 1 )
-//    {
-//    	n_playlists = 1;
-//    }
-//    else
-//    {
-//    	n_playlists = c->n_playlists;
-//    }
+
 
     
     if( c->parallel_open)
@@ -3742,7 +3732,7 @@ static int hls_read_header(AVFormatContext *s)
                  * context, so it doesn't need any special treatment like this. */
                 //APP to do
                 // TODO : loading first segment error code! add by tao
-                //startimes_error_log(NULL, STAR_LOG_MAIN, "error_code = %d download first ts failed",ret);
+                //ffPlayer_error_log(NULL, FFPLAYER_LOG_MAIN, "error_code = %d download first ts failed",ret);
                 /////////////////////////
                 av_log(s, AV_LOG_ERROR, "Error when loading first segment '%s'\n", pls->segments[0]->url);
                 avformat_free_context(pls->ctx);
@@ -3751,17 +3741,17 @@ static int hls_read_header(AVFormatContext *s)
                     ret = AVERROR_FAIL_UNSUPPORT_CRYPT_ALG;
 					if(c->parallel_open){
 						if((!c->uss_default->complete) && pls->_type == AVMEDIA_TYPE_VIDEO ){
-							startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_STREAM_FAIL );
-							startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", check_key_ret );
+							ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_STREAM_FAIL );
+							ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", check_key_ret );
 						}
 						else if((!c->uss_alt->complete) && pls->_type == AVMEDIA_TYPE_AUDIO){
-							startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_KEY_PARSE_STREAM_FAIL );
-							startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", check_key_ret );
+							ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_KEY_PARSE_STREAM_FAIL );
+							ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", check_key_ret );
 						}
 					}
 					else{
-						startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_STREAM_FAIL );
-						startimes_error_log(c->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", check_key_ret );
+						ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_PARSE_STREAM_FAIL );
+						ffPlayer_error_log(c->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", check_key_ret );
 					}
 					
                 }
@@ -3827,17 +3817,7 @@ static int hls_read_header(AVFormatContext *s)
         }
     }
 
-    /* Create a program for each variant */
-    //In order to star the play quickly, we only create the program for the first of variant.
-//    int n_variants = 1;
-//    if( global_adaptive_bitrate_switching && c->n_variants > 1 )
-//    {
-//    	n_variants = 1;
-//    }
-//    else
-//    {
-//    	n_variants = c->n_variants;
-//    }
+
 
     for (i = 0; i < c->n_variants; i++) {
         struct variant *v = c->variants[i];

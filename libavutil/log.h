@@ -25,7 +25,7 @@
 #include "avutil.h"
 #include "attributes.h"
 #include "version.h"
-
+#define FF_API_DLOG 0
 typedef enum {
     AV_CLASS_CATEGORY_NA = 0,
     AV_CLASS_CATEGORY_INPUT,
@@ -182,24 +182,18 @@ typedef struct AVClass {
  *
  * @{
  */
-/*
- * tao: main log
- *
- */
+
 #define MAX_LOG_SIZE 8192
 
-#define STAR_LOG_MAIN     0
+#define FFPLAYER_LOG_MAIN     0
 
-/*
- * zy: main log
- */
-#define STAR_TIME_LOG_MAIN     0
+#define FFPLAYER_TIME_LOG_MAIN     0
 
-#define STAR_TIME_LOG_TCP      1
+#define FFPLAYER_TIME_LOG_TCP      1
 
-#define STAR_TIME_LOG_COMMON       3
+#define FFPLAYER_TIME_LOG_COMMON       3
 
-#define STAR_TIME_LOG_FLOW_LOG     4
+#define FFPLAYER_TIME_LOG_FLOW_LOG     4
 
 /**
  * Print no output.
@@ -282,7 +276,7 @@ typedef struct AVClass {
  */
 
 
-#define LOG_TAG_TCP_RWTIMEOUT "STAR_TCP_RWTIMEOUT_LOG"
+#define LOG_TAG_TCP_RWTIMEOUT "FFPLAYER_TCP_RWTIMEOUT_LOG"
 #define LOG_TAG_PLAY_FLOW_LOG "PLAY_FLOW_LOG"
 
 void av_log(void *avcl, int level, const char *fmt, ...) av_printf_format(3, 4);
@@ -290,16 +284,16 @@ void av_log(void *avcl, int level, const char *fmt, ...) av_printf_format(3, 4);
  /**
   *  * taowj: send start err
   *   */
- void startimes_error_log(void *app_ctx, int level, const char *fmt, ...) av_printf_format(3, 4);
+ void ffPlayer_error_log(void *app_ctx, int level, const char *fmt, ...) av_printf_format(3, 4);
 
  /**
   *  * zy: send start err
   *   */
- void startimes_start_log(void *app_ctx, int level, const char *fmt, ...) av_printf_format(3, 4);
+ void ffPlayer_start_log(void *app_ctx, int level, const char *fmt, ...) av_printf_format(3, 4);
 
- void startimes_play_log(void *app_ctx, int level, const char* tag, const char *fmt, ...) av_printf_format(4, 5);
+ void ffPlayer_play_log(void *app_ctx, int level, const char* tag, const char *fmt, ...) av_printf_format(4, 5);
 
- void startimes_log(void *avcl, int level, const char *fmt, ...) av_printf_format(3, 4);
+ void ffPlayer_log(void *avcl, int level, const char *fmt, ...) av_printf_format(3, 4);
 
 
 
@@ -322,8 +316,8 @@ void av_vlog(void *avcl, int level, const char *fmt, va_list vl);
 
 
 //APP to do
-void star_vlog(void* avcl, int level, const char *fmt, va_list vl);
-void star_log_set_callback(void (*callback)(void*, int, const char*, va_list));
+void ffPlayer_vlog(void* avcl, int level, const char *fmt, va_list vl);
+void ffPlayer_log_set_callback(void (*callback)(void*, int, const char*, va_list));
 /////////////////////////
 
 

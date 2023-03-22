@@ -319,59 +319,59 @@ httpconnect:
 			if(s->url_start_status->status_type == STATUS_TYPE_ALT){
 				if(s->url_start_status->path_type==PATH_M3U8){
 					if (s->app_ctx->pss->redirect) {
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", send_fail==0?ERROR_REDIRECTED_M3U8_HTTP_OPEN_FAIL:ERROR_REDIRECTED_M3U8_HTTP_SEND_FAIL);
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", send_fail==0?ERROR_REDIRECTED_M3U8_HTTP_OPEN_FAIL:ERROR_REDIRECTED_M3U8_HTTP_SEND_FAIL);
 					}else{
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", send_fail==0?ERROR_M3U8_HTTP_OPEN_FAIL:ERROR_M3U8_HTTP_SEND_FAIL);
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", send_fail==0?ERROR_M3U8_HTTP_OPEN_FAIL:ERROR_M3U8_HTTP_SEND_FAIL);
 					}
 					if (s->http_code!=0)
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
 					else
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", err );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", err );
 				}else if(s->url_start_status->path_type==PATH_TS){
-					startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", send_fail==0?ERROR_TS_HTTP_OPEN_FAIL:ERROR_TS_HTTP_SEND_FAIL);
+					ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", send_fail==0?ERROR_TS_HTTP_OPEN_FAIL:ERROR_TS_HTTP_SEND_FAIL);
 					if (s->http_code!=0)
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
 					else
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", err );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", err );
 				}
 				else if(s->url_start_status->path_type==PATH_KEY){
-					startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", send_fail==0?ERROR_KEY_HTTP_OPEN_FAIL:ERROR_KEY_HTTP_SEND_FAIL);
+					ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", send_fail==0?ERROR_KEY_HTTP_OPEN_FAIL:ERROR_KEY_HTTP_SEND_FAIL);
 					if (s->http_code!=0)
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
 					else
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", err );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", err );
 				}
 			}
 			else{
 				if(s->url_start_status->path_type==PATH_M3U8){
 					if (s->app_ctx->pss->redirect) {
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_REDIRECTED_M3U8_HTTP_OPEN_FAIL:ERROR_REDIRECTED_M3U8_HTTP_SEND_FAIL);
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_REDIRECTED_M3U8_HTTP_OPEN_FAIL:ERROR_REDIRECTED_M3U8_HTTP_SEND_FAIL);
 					}else{
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_M3U8_HTTP_OPEN_FAIL:ERROR_M3U8_HTTP_SEND_FAIL);
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_M3U8_HTTP_OPEN_FAIL:ERROR_M3U8_HTTP_SEND_FAIL);
 					}
 					if (s->http_code!=0)
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
 					else
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", err );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", err );
 				}else if(s->url_start_status->path_type==PATH_TS){
-					startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_TS_HTTP_OPEN_FAIL:ERROR_TS_HTTP_SEND_FAIL);
+					ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_TS_HTTP_OPEN_FAIL:ERROR_TS_HTTP_SEND_FAIL);
 					if (s->http_code!=0)
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
 					else
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", err );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", err );
 				}
 				else if(s->url_start_status->path_type==PATH_KEY){
-					startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_KEY_HTTP_OPEN_FAIL:ERROR_KEY_HTTP_SEND_FAIL);
+					ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_KEY_HTTP_OPEN_FAIL:ERROR_KEY_HTTP_SEND_FAIL);
 					if (s->http_code!=0)
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
 					else
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", err );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", err );
 				}else if(s->url_start_status->path_type==PATH_MP4){
-					startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_MP4_HTTP_OPEN_FAIL:ERROR_MP4_HTTP_SEND_FAIL);
+					ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", send_fail==0?ERROR_MP4_HTTP_OPEN_FAIL:ERROR_MP4_HTTP_SEND_FAIL);
 					if (s->http_code!=0)
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
 					else
-						startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", err );
+						ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", err );
 				}
 				
 			}
@@ -422,7 +422,7 @@ static int http_redirect_ip_set_pre_dns(URLContext *h){
     av_log(NULL,AV_LOG_DEBUG,
            "http_redirect_ip:http_redirect_ip_set_pre_dns,hostname=%s,ip=%s,location=%s\n",hostname,s->redirect_ip,s->location);
     
-    char temp_string[STAR_MAX_NAME_NUM];
+    char temp_string[FFPLAYER_MAX_NAME_NUM];
     memset(temp_string, 0,sizeof(temp_string));
     char *pstr;
     char *pp;
@@ -431,7 +431,7 @@ static int http_redirect_ip_set_pre_dns(URLContext *h){
     
     int message_num=1;
     while(pstr != NULL){
-        if(message_num>STAR_MAX_IP_NUM-1)
+        if(message_num>FFPLAYER_MAX_IP_NUM-1)
             break;
         strcpy(((s->app_ctx->pre_dns->star_DNS_list.list)[0].star_DNS_ip)[message_num], pstr);
         message_num++;
@@ -511,8 +511,8 @@ redo:
             
         s->app_ctx->pss->redirect=1;
         ffg_pss_set_http_redirect_path(s->app_ctx,s->location);
-        startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN, "m3u8_redirect_complete = %lld", av_gettime()/1000);
-        startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN, "m3u8_redirect_counts = %d", redirects);
+        ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "m3u8_redirect_complete = %lld", av_gettime()/1000);
+        ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "m3u8_redirect_counts = %d", redirects);
         av_application_did_http_redirected(s->app_ctx, (void*)h, s->location);
         add_flow_log(s->app_ctx,s->url_start_status,FL_HTTP_RESPONSE_CODE,s->http_code);
         add_flow_log(s->app_ctx,s->url_start_status,FL_HTTP_RESPONSE,av_gettime()/1000);
@@ -529,16 +529,16 @@ redo:
 		//m3u8_http_response timestamp is the same as m3u8_download_finish
 		if(s->url_start_status->status_type == STATUS_TYPE_ALT){
 			if(s->url_start_status->path_type==PATH_TS){
-				startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN, "ts_http_response_audio = %lld",av_gettime()/1000);
+				ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "ts_http_response_audio = %lld",av_gettime()/1000);
 			}else if (s->url_start_status->path_type==PATH_KEY){
-				startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN, "key_http_response_audio = %lld",av_gettime()/1000);
+				ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "key_http_response_audio = %lld",av_gettime()/1000);
 			} 
 		}
 		else{
 			if(s->url_start_status->path_type==PATH_TS){
-				startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN, "ts_http_response = %lld",av_gettime()/1000);
+				ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "ts_http_response = %lld",av_gettime()/1000);
 			}else if (s->url_start_status->path_type==PATH_KEY){
-				startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN, "key_http_response = %lld",av_gettime()/1000);
+				ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "key_http_response = %lld",av_gettime()/1000);
 			} 
 		}
 	}
@@ -568,36 +568,36 @@ fail:
 		if(s->url_start_status->status_type == STATUS_TYPE_ALT){
 			if(s->url_start_status->path_type==PATH_M3U8){
 				if (s->app_ctx->pss->redirect) {
-					startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d",ERROR_REDIRECTED_M3U8_HTTP_RESPONSE_FAIL);
+					ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d",ERROR_REDIRECTED_M3U8_HTTP_RESPONSE_FAIL);
 				}else{
-					startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_M3U8_HTTP_RESPONSE_FAIL );
+					ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_M3U8_HTTP_RESPONSE_FAIL );
 				}
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
 			}else if(s->url_start_status->path_type==PATH_TS){
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_TS_HTTP_RESPONSE_FAIL );
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_TS_HTTP_RESPONSE_FAIL );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
 			}else if(s->url_start_status->path_type==PATH_KEY){
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_KEY_HTTP_RESPONSE_FAIL );
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_audio = %d", ERROR_KEY_HTTP_RESPONSE_FAIL );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex_audio = %d", s->http_code );
 			}
 		}
 		else{
 			if(s->url_start_status->path_type==PATH_M3U8){
 				if (s->app_ctx->pss->redirect) {
-					startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d",ERROR_REDIRECTED_M3U8_HTTP_RESPONSE_FAIL);
+					ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d",ERROR_REDIRECTED_M3U8_HTTP_RESPONSE_FAIL);
 				}else{
-					startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_M3U8_HTTP_RESPONSE_FAIL );
+					ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_M3U8_HTTP_RESPONSE_FAIL );
 				}
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
 			}else if(s->url_start_status->path_type==PATH_TS){
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_TS_HTTP_RESPONSE_FAIL );
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_TS_HTTP_RESPONSE_FAIL );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
 			}else if(s->url_start_status->path_type==PATH_KEY){
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_HTTP_RESPONSE_FAIL );
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_KEY_HTTP_RESPONSE_FAIL );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
 			}else if(s->url_start_status->path_type==PATH_MP4){
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code = %d", ERROR_MP4_HTTP_RESPONSE_FAIL );
-				startimes_error_log(s->app_ctx, STAR_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code = %d", ERROR_MP4_HTTP_RESPONSE_FAIL );
+				ffPlayer_error_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "error_code_ex = %d", s->http_code );
 			}
 			
 		}
@@ -1372,10 +1372,10 @@ static int process_line(URLContext *h, char *line, int line_count,
         } else if (!av_strcasecmp(tag, "Content-Encoding")) {
 			if (s->app_ctx && s->url_start_status && (!s->url_start_status->complete)){
 				if(s->url_start_status->status_type == STATUS_TYPE_ALT){
-					startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN, "m3u8_compressed_audio = 1");
+					ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "m3u8_compressed_audio = 1");
 				}
 				else{
-					startimes_start_log(s->app_ctx, STAR_TIME_LOG_MAIN, "m3u8_compressed = 1");
+					ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN, "m3u8_compressed = 1");
 				}
 			}
 

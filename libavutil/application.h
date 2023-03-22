@@ -59,9 +59,9 @@
 #define QUIC_REQUEST_LOG_SIZE 8192*2   //for quic request flow log
 #define QUIC_CONNECTION_LOG_TOTAL_SIZE 4096*2  //for quic connect log
 
-#define STAR_MAX_NAME_NUM 1024
-#define STAR_MAX_IP_NUM 11
-#define STAR_MAX_DOMAIN_NUM 5
+#define FFPLAYER_MAX_NAME_NUM 1024
+#define FFPLAYER_MAX_IP_NUM 11
+#define FFPLAYER_MAX_DOMAIN_NUM 5
 
 /**
  * player options
@@ -268,12 +268,12 @@ typedef struct stTcpStatistic{
 
 /**********for pre dns begin**********/
 typedef struct DnsInfo {
-    char star_DNS_ip[STAR_MAX_IP_NUM][STAR_MAX_NAME_NUM];
+    char star_DNS_ip[FFPLAYER_MAX_IP_NUM][FFPLAYER_MAX_NAME_NUM];
     int num;
 } DnsInfo;
 
 typedef struct DnsInfoList {
-    DnsInfo list[STAR_MAX_DOMAIN_NUM];
+    DnsInfo list[FFPLAYER_MAX_DOMAIN_NUM];
     int num;
 } DnsInfoList;
 
