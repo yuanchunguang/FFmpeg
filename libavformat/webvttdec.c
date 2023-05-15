@@ -30,7 +30,7 @@
 #include "libavutil/bprint.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
-
+#define  MAX_TEXT_COUNT 10
 typedef struct {
     const AVClass *class;
     FFDemuxSubtitlesQueue q;
@@ -57,24 +57,18 @@ static int64_t read_ts(const char *s)
     return AV_NOPTS_VALUE;
 }
 
-static int webvtt_read_header(AVFormatContext *s)
+static int webvtt_flush_data(AVFormatContext *s)
 {
     WebVTTContext *webvtt = s->priv_data;
-    AVBPrint header, cue;
+     AVBPrint header, cue;
     int res = 0;
-    AVStream *st = avformat_new_stream(s, NULL);
-
-    if (!st)
-        return AVERROR(ENOMEM);
-    avpriv_set_pts_info(st, 64, 1, 1000);
-    st->codecpar->codec_type = AVMEDIA_TYPE_SUBTITLE;
-    st->codecpar->codec_id   = AV_CODEC_ID_WEBVTT;
-    st->disposition |= webvtt->kind;
-
     av_bprint_init(&header, 0, AV_BPRINT_SIZE_UNLIMITED);
     av_bprint_init(&cue,    0, AV_BPRINT_SIZE_UNLIMITED);
 
-    for (;;) {
+    for (;;) 
+    {
+        if ( webvtt->q.nb_subs >=webvtt->q.current_sub_idx +MAX_TEXT_COUNT)
+             goto end;
         int i;
         int64_t pos;
         AVPacket *sub;
@@ -169,10 +163,26 @@ end:
     av_bprint_finalize(&header, NULL);
     return res;
 }
+static int webvtt_read_header(AVFormatContext *s)
+{
+    WebVTTContext *webvtt = s->priv_data;
+    AVBPrint header, cue;
+    AVStream *st = avformat_new_stream(s, NULL);
+
+    if (!st)
+        return AVERROR(ENOMEM);
+    avpriv_set_pts_info(st, 64, 1, 1000);
+    st->codecpar->codec_type = AVMEDIA_TYPE_SUBTITLE;
+    st->codecpar->codec_id   = AV_CODEC_ID_WEBVTT;
+    st->disposition |= webvtt->kind;
+    return  webvtt_flush_data(s);
+
+}
 
 static int webvtt_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
     WebVTTContext *webvtt = s->priv_data;
+    webvtt_flush_data(s);
     return ff_subtitles_queue_read_packet(&webvtt->q, pkt);
 }
 

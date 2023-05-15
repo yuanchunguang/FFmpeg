@@ -55,6 +55,7 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 static int av_log_level = AV_LOG_INFO;
+static int av_report_log_level = AV_REPORT_LOG_MAIN;
 static int flags;
 
 
@@ -421,23 +422,14 @@ void ffPlayer_error_log(void* app_ctx, int level, const char *fmt, ...)
 
 void ffPlayer_start_log(void* app_ctx, int level, const char *fmt, ...)
 {
-	//ffPlayer_error_log(avcl, level, fmt, ...);
-    /*AVClass* avc = avcl ? *(AVClass **) avcl : NULL;
-    va_list vl;
-    int av_level=AV_LOG_INFO;
-    va_start(vl, fmt);
-    if (avc && avc->version >= (50 << 16 | 15 << 8 | 2) &&
-        avc->log_level_offset_offset && av_level >= AV_LOG_FATAL)
-        av_level += *(int *) (((uint8_t *) avcl) + avc->log_level_offset_offset);*/
-//    char new_string[1024]="FFPLAYER_START_TIME_LOG:";
-//    switch(level){
-//    case 0:
-//    	strcat(new_string,"0");
-//    	break;
-//    case 1:
-//        strcat(new_string,"1");
-//        break;
-//    }
+    if(av_report_log_level==AV_REPORT_LOG_MAIN)
+    {
+           if(level==FFPLAYER_TIME_LOG_TCP || level==FFPLAYER_TIME_LOG_FLOW_LOG) return;
+    }else if(av_report_log_level=AV_REPORT_LOG_LOW)
+    {
+        if(level==FFPLAYER_TIME_LOG_TCP || level==FFPLAYER_TIME_LOG_FLOW_LOG) return;
+    }
+    
     AVApplicationContext *ctx = (AVApplicationContext *)app_ctx;
     va_list vl;
     int av_level=AV_LOG_INFO;
@@ -445,9 +437,7 @@ void ffPlayer_start_log(void* app_ctx, int level, const char *fmt, ...)
     char new_string[LINE_SZ]={0};
     sprintf( new_string, "FFPLAYER_START_TIME_LOG:%d", level);
     char count_string[32]={0};
-    //sprintf(count_string,":%d:",ctx->lss->start_time_log_count);
     strcat(new_string,":0:");
-    //ctx->lss->start_time_log_count++;
     strcat(new_string,fmt);
     ffPlayer_vlog(app_ctx, av_level, new_string, vl);
     va_end(vl);
@@ -455,14 +445,14 @@ void ffPlayer_start_log(void* app_ctx, int level, const char *fmt, ...)
 
 void ffPlayer_play_log(void* app_ctx, int level, const char*tag, const char *fmt, ...)
 {
-    //ffPlayer_error_log(avcl, level, fmt, ...);
-    /*AVClass* avc = avcl ? *(AVClass **) avcl : NULL;
-    va_list vl;
-    int av_level=AV_LOG_INFO;
-    va_start(vl, fmt);
-    if (avc && avc->version >= (50 << 16 | 15 << 8 | 2) &&
-        avc->log_level_offset_offset && av_level >= AV_LOG_FATAL)
-        av_level += *(int *) (((uint8_t *) avcl) + avc->log_level_offset_offset);*/
+    if(av_report_log_level==AV_REPORT_LOG_MAIN)
+    {
+        if(level==FFPLAYER_TIME_LOG_TCP || level==FFPLAYER_TIME_LOG_FLOW_LOG) return;
+    }else if(av_report_log_level=AV_REPORT_LOG_LOW)
+    {
+        if(level==FFPLAYER_TIME_LOG_TCP || level==FFPLAYER_TIME_LOG_FLOW_LOG) return;
+    }
+    
     va_list vl;
     int av_level=AV_LOG_INFO;
     va_start(vl, fmt);
@@ -501,10 +491,18 @@ int av_log_get_level(void)
 {
     return av_log_level;
 }
+int av_report_log_get_level(void)
+{
+    return av_report_log_level;
+}
 
 void av_log_set_level(int level)
 {
     av_log_level = level;
+}
+void av_report_log_set_level(int level)
+{
+    av_report_log_level = level;
 }
 
 void av_log_set_flags(int arg)

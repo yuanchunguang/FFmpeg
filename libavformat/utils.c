@@ -955,7 +955,6 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
 
     for (;;) {
         AVPacketList *pktl = s->internal->raw_packet_buffer;
-
         if (pktl) {
             *pkt = pktl->pkt;
             st   = s->streams[pkt->stream_index];
@@ -969,7 +968,6 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
                 return 0;
             }
         }
-
         pkt->data = NULL;
         pkt->size = 0;
         av_init_packet(pkt);
@@ -999,7 +997,6 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
                 return ret;
             *pkt = tmp;
         }
-
         if ((s->flags & AVFMT_FLAG_DISCARD_CORRUPT) &&
             (pkt->flags & AV_PKT_FLAG_CORRUPT)) {
             av_log(s, AV_LOG_WARNING,
@@ -1013,7 +1010,6 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
             av_log(s, AV_LOG_ERROR, "Invalid stream index %d\n", pkt->stream_index);
             continue;
         }
-
         st = s->streams[pkt->stream_index];
 
         if (update_wrap_reference(s, st, pkt->stream_index, pkt) && st->pts_wrap_behavior == AV_PTS_WRAP_SUB_OFFSET) {
@@ -1025,7 +1021,6 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
             if (!is_relative(st->cur_dts))
                 st->cur_dts = wrap_timestamp(st, st->cur_dts);
         }
-
         pkt->dts = wrap_timestamp(st, pkt->dts);
         pkt->pts = wrap_timestamp(st, pkt->pts);
 
@@ -1037,14 +1032,12 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
 
         if (!pktl && st->request_probe <= 0)
             return ret;
-
         err = ff_packet_list_put(&s->internal->raw_packet_buffer,
                                  &s->internal->raw_packet_buffer_end,
                                  pkt, 0);
         if (err)
             return err;
         s->internal->raw_packet_buffer_remaining_size -= pkt->size;
-
         if ((err = probe_codec(s, st, pkt)) < 0)
             return err;
     }
@@ -1711,11 +1704,9 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
     AVDictionary *metadata = NULL;
 
     av_init_packet(pkt);
-
     while (!got_packet && !s->internal->parse_queue) {
         AVStream *st;
         AVPacket cur_pkt;
-
         /* read next packet */
         ret = ff_read_packet(s, &cur_pkt);
         if (ret < 0) {
@@ -1747,7 +1738,6 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
                 av_parser_close(st->parser);
                 st->parser = NULL;
             }
-
             ret = avcodec_parameters_to_context(st->internal->avctx, st->codecpar);
             if (ret < 0)
                 return ret;
@@ -1797,7 +1787,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
             else if (st->need_parsing == AVSTREAM_PARSE_FULL_RAW)
                 st->parser->flags |= PARSER_FLAG_USE_CODEC_TS;
         }
-
         if (!st->need_parsing || !st->parser) {
             /* no parsing needed: we just output the packet as is */
             *pkt = cur_pkt;
@@ -1831,7 +1820,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
             got_packet = 0;
         }
     }
-
     if (!got_packet && s->internal->parse_queue)
         ret = read_from_packet_buffer(&s->internal->parse_queue, &s->internal->parse_queue_end, pkt);
 
@@ -1881,7 +1869,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
         if (!(s->flags & AVFMT_FLAG_KEEP_SIDE_DATA))
             av_packet_merge_side_data(pkt);
     }
-
     av_opt_get_dict_val(s, "metadata", AV_OPT_SEARCH_CHILDREN, &metadata);
     if (metadata) {
         s->event_flags |= AVFMT_EVENT_FLAG_METADATA_UPDATED;
@@ -1893,7 +1880,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
 #if FF_API_LAVF_AVCTX
     update_stream_avctx(s);
 #endif
-
     if (s->debug & FF_FDEBUG_TS)
         av_log(s, AV_LOG_DEBUG,
                "read_frame_internal stream=%d, pts=%s, dts=%s, "
@@ -1902,7 +1888,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
                av_ts2str(pkt->pts),
                av_ts2str(pkt->dts),
                pkt->size, pkt->duration, pkt->flags);
-
     return ret;
 }
 
@@ -1912,7 +1897,6 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
     int eof = 0;
     int ret;
     AVStream *st;
-
     if (!genpts) {
         ret = s->internal->packet_buffer
               ? read_from_packet_buffer(&s->internal->packet_buffer,
@@ -1922,13 +1906,11 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
             return ret;
         goto return_packet;
     }
-
     for (;;) {
         AVPacketList *pktl = s->internal->packet_buffer;
 
         if (pktl) {
             AVPacket *next_pkt = &pktl->pkt;
-
             if (next_pkt->dts != AV_NOPTS_VALUE) {
                 int wrap_bits = s->streams[next_pkt->stream_index]->pts_wrap_bits;
                 // last dts seen for this stream. if any of packets following
@@ -1968,7 +1950,6 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
                 goto return_packet;
             }
         }
-
         ret = read_frame_internal(s, pkt);
         if (ret < 0) {
             if (pktl && ret != AVERROR(EAGAIN)) {
@@ -1977,7 +1958,6 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
             } else
                 return ret;
         }
-
         ret = add_to_pktbuf(&s->internal->packet_buffer, pkt,
                             &s->internal->packet_buffer_end, 1);
         av_packet_unref(pkt);
@@ -1992,12 +1972,10 @@ return_packet:
         ff_reduce_index(s, st->index);
         av_add_index_entry(st, pkt->pos, pkt->dts, 0, 0, AVINDEX_KEYFRAME);
     }
-
     if (is_relative(pkt->dts))
         pkt->dts -= RELATIVE_TS_BASE;
     if (is_relative(pkt->pts))
         pkt->pts -= RELATIVE_TS_BASE;
-
     return ret;
 }
 
@@ -3716,6 +3694,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
     int64_t oldprobesize = ic->probesize;
     int64_t probesize = ic->probesize;
     int eof_reached = 0;
+
     int *missing_streams = av_opt_ptr(ic->iformat->priv_class, ic->priv_data, "missing_streams");
 
     AVDictionaryEntry *t;
@@ -3736,7 +3715,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
                 if (ret == AVERROR(EAGAIN))
                     continue;
                 if (ret < 0) {
-                    /* EOF or error*/
+                    //EOF or error
                     eof_reached = 1;
                     break;
                 }
@@ -4624,79 +4603,61 @@ void ff_free_stream(AVFormatContext *s, AVStream *st)
 void avformat_free_context(AVFormatContext *s)
 {
     int i;
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 1);
     if (!s)
         return;
 
     av_opt_free(s);
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 2);
     if (s->iformat && s->iformat->priv_class && s->priv_data)
         av_opt_free(s->priv_data);
     if (s->oformat && s->oformat->priv_class && s->priv_data)
         av_opt_free(s->priv_data);
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n",3);
     for (i = s->nb_streams - 1; i >= 0; i--)
         ff_free_stream(s, s->streams[i]);
 
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 4);
     for (i = s->nb_programs - 1; i >= 0; i--) {
         av_dict_free(&s->programs[i]->metadata);
         av_freep(&s->programs[i]->stream_index);
         av_freep(&s->programs[i]);
     }
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 5);
     av_freep(&s->programs);
     av_freep(&s->priv_data);
     while (s->nb_chapters--) {
         av_dict_free(&s->chapters[s->nb_chapters]->metadata);
         av_freep(&s->chapters[s->nb_chapters]);
     }
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 6);
     av_freep(&s->chapters);
-		av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d p1=%p;p2=%p \n", 61,(void*)s->metadata,s->internal->id3v2_meta);
     av_dict_free(&s->metadata);
     av_dict_free(&s->internal->id3v2_meta);
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d p1=%p;p2=%p \n", 62,(void*)s->streams,s->internal);
     av_freep(&s->streams);
     av_freep(&s->internal);
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d p1=%p \n", 63,(void*)s);
     flush_packet_queue(s);
     av_freep(&s->internal);
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d p1=%p \n", 64,(void*)s->url);
     //av_freep(&s->url);
     //av_free(s->url);
     av_free(s);
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_free_context: close =%d\n", 7);
 }
 
 void avformat_close_input(AVFormatContext **ps)
 {
-	av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 1);
     AVFormatContext *s;
     AVIOContext *pb;
 
     if (!ps || !*ps)
         return;
-		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 2);
     s  = *ps;
     pb = s->pb;
 
     if ((s->iformat && strcmp(s->iformat->name, "image2") && s->iformat->flags & AVFMT_NOFILE) ||
         (s->flags & AVFMT_FLAG_CUSTOM_IO))
         pb = NULL;
-		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 3);
     flush_packet_queue(s);
-		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 4);
     if (s->iformat)
         if (s->iformat->read_close)
             s->iformat->read_close(s);
-		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 5);
     avformat_free_context(s);
-		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 6);
     *ps = NULL;
 
     avio_close(pb);
-		av_log(NULL, AV_LOG_TRACE, "winston avformat_close_input: close =%d\n", 7);
 }
 
 AVStream *avformat_new_stream(AVFormatContext *s, const AVCodec *c)

@@ -157,6 +157,7 @@ AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened,
             nodat = ID3_GREATER_PROBE;
     }
     while ((fmt1 = av_demuxer_iterate(&i))) {
+   
         if (!is_opened == !(fmt1->flags & AVFMT_NOFILE) && strcmp(fmt1->name, "image2"))
             continue;
         score = 0;
@@ -236,7 +237,6 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
     }
     if (offset >= max_probe_size)
         return AVERROR(EINVAL);
-
     if (pb->av_class) {
         uint8_t *mime_type_opt = NULL;
         char *semi;
@@ -263,10 +263,10 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
          probe_size = FFMIN(probe_size << 1,
                             FFMAX(max_probe_size, probe_size + 1))) {
         score = probe_size < max_probe_size ? AVPROBE_SCORE_RETRY : 0;
-
         /* Read probe data. */
         if ((ret = av_reallocp(&buf, probe_size + AVPROBE_PADDING_SIZE)) < 0)
             goto fail;
+            
         if ((ret = avio_read(pb, buf + buf_offset,
                              probe_size - buf_offset)) < 0) {
             /* Fail if error was not end of file, otherwise, lower score. */

@@ -1189,7 +1189,7 @@ static int draw_glyphs(DrawTextContext *s, AVFrame *frame,
         dummy.code = code;
         dummy.fontsize = s->fontsize;
         glyph = av_tree_find(s->glyphs, &dummy, glyph_cmp, NULL);
-
+        if(glyph==NULL)    return AVERROR(EINVAL);
         bitmap = borderw ? glyph->border_bitmap : glyph->bitmap;
 
         if (glyph->bitmap.pixel_mode != FT_PIXEL_MODE_MONO &&

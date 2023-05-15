@@ -246,6 +246,15 @@ typedef struct AVClass {
 
 #define AV_LOG_MAX_OFFSET (AV_LOG_TRACE - AV_LOG_QUIET)
 
+
+
+
+
+
+#define AV_REPORT_LOG_ALL       0          // 上报最详细log
+#define AV_REPORT_LOG_LOW      1        // 上报播放基本log（错误播放基本信息等）
+#define AV_REPORT_LOG_MAIN      2        // 上报播放主要log（错误播放所有阶段）
+
 /**
  * @}
  */
@@ -282,12 +291,12 @@ typedef struct AVClass {
 void av_log(void *avcl, int level, const char *fmt, ...) av_printf_format(3, 4);
 
  /**
-  *  * taowj: send start err
+  *  * send start err
   *   */
  void ffPlayer_error_log(void *app_ctx, int level, const char *fmt, ...) av_printf_format(3, 4);
 
  /**
-  *  * zy: send start err
+  *  *  send start err
   *   */
  void ffPlayer_start_log(void *app_ctx, int level, const char *fmt, ...) av_printf_format(3, 4);
 
@@ -329,6 +338,14 @@ void ffPlayer_log_set_callback(void (*callback)(void*, int, const char*, va_list
  * @return Current log level
  */
 int av_log_get_level(void);
+/**
+ * Get the current report log level
+ *
+ * @see lavu_log_constants
+ *
+ * @return Current log level
+ */
+int av_report_log_get_level(void);
 
 /**
  * Set the log level
@@ -338,6 +355,14 @@ int av_log_get_level(void);
  * @param level Logging level
  */
 void av_log_set_level(int level);
+/**
+ * Set the report log level
+ *
+ * @see lavu_log_constants
+ *
+ * @param level Logging level
+ */
+void av_report_log_set_level(int level);
 
 /**
  * Set the logging callback

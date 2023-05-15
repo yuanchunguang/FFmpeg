@@ -23,7 +23,7 @@
 #include "avio_internal.h"
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
-
+#define MAX_SUBCOUNT  10
 void ff_text_init_avio(void *s, FFTextReader *r, AVIOContext *pb)
 {
     int i;
@@ -124,7 +124,6 @@ AVPacket *ff_subtitles_queue_insert(FFDemuxSubtitlesQueue *q,
         memcpy(sub->data + old_len, event, len);
     } else {
         /* new event */
-
         if (q->nb_subs >= INT_MAX/sizeof(*q->subs) - 1)
             return NULL;
         subs = av_fast_realloc(q->subs, &q->allocated_size,
