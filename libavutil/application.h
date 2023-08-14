@@ -163,7 +163,7 @@ typedef struct LogShowState {
     int first_video_frame_rendered;
     int find_stream_info;
     int download_ts_data;
-    int download_ts_data_audio;
+    int download_ts_data_sub;
     //int start_time_log_count;
     //int start_error_log_count;
     //int64_t last_download_fail_timestamp;
@@ -334,7 +334,7 @@ struct AVApplicationContext {
     
     URLStartStatus *uss_default_segment;
     URLStartStatus *uss_alt_segment;  //in order to record the audio segment status when open hls video and audio in parallel
-	
+	char defout_subtitle_language[256];
     int (*func_on_app_event)(AVApplicationContext *h, int event_type ,void *obj, size_t size);
 };
 

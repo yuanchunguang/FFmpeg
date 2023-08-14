@@ -31,6 +31,7 @@
 
 /** size of probe buffer, for guessing file type from file contents */
 #define PROBE_BUF_MIN 2048
+#define PROBE_SUBTITLE_BUF_MIN 7
 #define PROBE_BUF_MAX (1 << 20)  //1MB
 
 #define MAX_PROBE_PACKETS 2500
@@ -663,7 +664,7 @@ int ff_format_output_open(AVFormatContext *s, const char *url, AVDictionary **op
  * instead of calling the pointer directly.
  */
 void ff_format_io_close(AVFormatContext *s, AVIOContext **pb);
-
+void ff_format_io_close_use_m3u8_optimize_read(AVFormatContext *s, AVIOContext **pb);
 /**
  * Utility function to check if the file uses http or https protocol
  *

@@ -235,6 +235,7 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
                "Specified probe size value %u cannot be < %u\n", max_probe_size, PROBE_BUF_MIN);
         return AVERROR(EINVAL);
     }
+
     if (offset >= max_probe_size)
         return AVERROR(EINVAL);
     if (pb->av_class) {
@@ -251,6 +252,7 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
         pd.customkey_alg = av_strdup(pb->customkey_alg);
         pd.customkey_src = av_strdup(pb->customkey_src);
     }
+
 #if 0
     if (!*fmt && pb->av_class && av_opt_get(pb, "mime_type", AV_OPT_SEARCH_CHILDREN, &mime_type) >= 0 && mime_type) {
         if (!av_strcasecmp(mime_type, "audio/aacp")) {
@@ -266,7 +268,10 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
         /* Read probe data. */
         if ((ret = av_reallocp(&buf, probe_size + AVPROBE_PADDING_SIZE)) < 0)
             goto fail;
-            
+        if (strstr(filename, ".vtt")) 
+        {
+            probe_size=PROBE_SUBTITLE_BUF_MIN;
+        }
         if ((ret = avio_read(pb, buf + buf_offset,
                              probe_size - buf_offset)) < 0) {
             /* Fail if error was not end of file, otherwise, lower score. */

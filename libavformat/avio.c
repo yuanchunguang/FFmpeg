@@ -433,10 +433,9 @@ int ffurl_open_whitelist(URLContext **puc, const char *filename, int flags,
 		&& (app_ctx->pss->parse_av_split_info_complete != 1)
 	    && app_ctx->pss->media_type == AV_SEPARATE 
 		&& h ){
-		parse_av_split_info(app_ctx, h);
+		//parse_av_split_info(app_ctx, h);
 		app_ctx->pss->parse_av_split_info_complete = 1;
 	}
-	
     ret = ffurl_connect(*puc, options);
     if (!ret)
         return 0;
@@ -574,7 +573,7 @@ int ffurl_closep(URLContext **hh)
         av_freep(&h->priv_data);
     }
     av_opt_free(h);
-    av_freep(&h->args.info);
+    //av_freep(&h->args.info);
     av_freep(hh);
     av_log(NULL, AV_LOG_INFO, "close url context end, url=%s\n", filename);
     return ret;
@@ -586,6 +585,28 @@ int ffurl_close(URLContext *h)
     return ffurl_closep(&h);
 }
 
+int ffurl_closep_use_m3u8_optimize_read(URLContext **hh)
+{
+    URLContext *h= *hh;
+    int ret = 0;
+    if (!h)
+        return 0;     /* can happen when ffurl_open fails */
+    char filename[1024];
+    memset(filename, 0 , sizeof(filename));
+    sprintf(filename, "%s", h->filename);
+    av_log(NULL, AV_LOG_INFO, "close url for use_m3u8_optimize_read context begin, url=%s, h->is_connected=%d\n", filename,h->is_connected);
+    if (h->is_connected && h->prot->url_close_use_m3u8_optimize_read)
+        ret = h->prot->url_close_use_m3u8_optimize_read(h);
+
+    av_log(NULL, AV_LOG_INFO, "close url for use_m3u8_optimize_read context end, url=%s\n", filename);
+    return ret;
+}
+
+int ffurl_close_use_m3u8_optimize_read(URLContext *h)
+{
+    //bitrate_finish_calculate();
+    return ffurl_closep_use_m3u8_optimize_read(&h);
+}
 
 const char *avio_find_protocol_name(const char *url)
 {

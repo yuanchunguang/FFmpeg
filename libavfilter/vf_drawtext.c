@@ -1148,19 +1148,23 @@ static int expand_text(AVFilterContext *ctx, char *text, AVBPrint *bp)
     int ret;
 
     av_bprint_clear(bp);
-    while (*text) {
-        if (*text == '\\' && text[1]) {
-            av_bprint_chars(bp, text[1], 1);
-            text += 2;
-        } else if (*text == '%') {
-            text++;
-            if ((ret = expand_function(ctx, bp, &text)) < 0)
-                return ret;
-        } else {
-            av_bprint_chars(bp, *text, 1);
-            text++;
+    if(text)
+    {
+        while (*text) {
+            if (*text == '\\' && text[1]) {
+                av_bprint_chars(bp, text[1], 1);
+                text += 2;
+            } else if (*text == '%') {
+                text++;
+                if ((ret = expand_function(ctx, bp, &text)) < 0)
+                    return ret;
+            } else {
+                av_bprint_chars(bp, *text, 1);
+                text++;
+            }
         }
     }
+
     if (!av_bprint_is_complete(bp))
         return AVERROR(ENOMEM);
     return 0;
@@ -1387,7 +1391,10 @@ static int draw_text(AVFilterContext *ctx, AVFrame *frame,
     s->var_values[VAR_MAX_GLYPH_D] = s->var_values[VAR_DESCENT] = y_min;
 
     s->var_values[VAR_LINE_H] = s->var_values[VAR_LH] = s->max_glyph_h;
-
+    //winstonlog
+    av_expr_parse(&s->x_pexpr, s->x_expr, var_names, NULL, NULL, fun2_names, fun2, 0, ctx);
+    av_expr_parse(&s->y_pexpr, s->y_expr, var_names, NULL, NULL, fun2_names, fun2, 0, ctx);
+    //winstonlog
     s->x = s->var_values[VAR_X] = av_expr_eval(s->x_pexpr, s->var_values, &s->prng);
     s->y = s->var_values[VAR_Y] = av_expr_eval(s->y_pexpr, s->var_values, &s->prng);
     /* It is necessary if x is expressed from y  */

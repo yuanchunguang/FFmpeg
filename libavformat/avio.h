@@ -350,6 +350,7 @@ typedef struct AVIOContext {
     
     char* customkey_alg;
     char* customkey_src;
+    int iid;
 } AVIOContext;
 
 /**
@@ -741,7 +742,7 @@ int avio_open2(AVIOContext **s, const char *url, int flags,
  * @see avio_closep
  */
 int avio_close(AVIOContext *s);
-
+int avio_close_use_m3u8_optimize_read(AVIOContext *s);
 /**
  * Close the resource accessed by the AVIOContext *s, free it
  * and set the pointer pointing to it to NULL.

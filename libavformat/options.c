@@ -125,7 +125,10 @@ static void io_close_default(AVFormatContext *s, AVIOContext *pb)
 {
     avio_close(pb);
 }
-
+static void io_close_default_use_m3u8_optimize_read(AVFormatContext *s, AVIOContext *pb)
+{
+    avio_close_use_m3u8_optimize_read(pb);
+}
 static void avformat_get_context_defaults(AVFormatContext *s)
 {
     memset(s, 0, sizeof(AVFormatContext));
@@ -134,7 +137,7 @@ static void avformat_get_context_defaults(AVFormatContext *s)
 
     s->io_open  = io_open_default;
     s->io_close = io_close_default;
-
+    s->io_close_use_m3u8_optimize_read = io_close_default_use_m3u8_optimize_read;
     av_opt_set_defaults(s);
 }
 

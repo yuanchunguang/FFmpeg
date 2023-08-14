@@ -572,7 +572,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
     AVDictionary *tmp = NULL;
     AVDictionary *tmp2 = NULL;
     ID3v2ExtraMeta *id3v2_extra_meta = NULL;
-
     if (!s && !(s = avformat_alloc_context()))
         return AVERROR(ENOMEM);
     if (!s->av_class) {
@@ -600,7 +599,8 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
               s->app_ctx = (int64_t)(intptr_t)strtoll(app_ctx_opt->value, NULL, 10);
               s->app_ctx_intptr =  (int64_t)(intptr_t)strtoll(app_ctx_opt->value, NULL, 10);
         }
-    }else  if(s->app_ctx_intptr)
+    }  
+    if(s->app_ctx_intptr)
     {
         s->app_ctx = (AVApplicationContext *)(intptr_t)s->app_ctx_intptr;
         av_dict_set_int(&tmp, "ijkapplication", s->app_ctx_intptr, 0);
@@ -618,12 +618,10 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
 	}
     if (s->app_ctx
         && (!s->app_ctx->pss->master_m3u8_complete)
-        && s->app_ctx->pss->media_type == AV_SEPARATE
         && av_strnstr(filename, ".m3u8", strlen(filename)) ){
         ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_begin_master = %lld", av_gettime() / 1000);
     }
     //////////////////////////////////////////////////////////
-
     if ((ret = init_input(s, filename, &tmp)) < 0){
     	// TODO: down load m3u8 failed error code! 
         av_log(s, AV_LOG_ERROR, "fail to download m3u8 file %s\n", filename);
@@ -635,15 +633,18 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
         goto fail;
     }
 
-	if (s->app_ctx && (!s->app_ctx->pss->m3u8_complete)) {
+	if (s->app_ctx && (!s->app_ctx->pss->m3u8_complete)) 
+    {
 		if (av_match_ext(filename, FILE_EXT_MP4)) {
 			ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_mp4_finish = %lld", av_gettime() / 1000);
             s->app_ctx->pss->m3u8_complete = 1;
+
 		} else if (av_match_ext(filename, FILE_EXT_M3U8)  && s->app_ctx->pss->media_type != AV_SEPARATE ) {
 			ffPlayer_start_log(s->app_ctx, FFPLAYER_TIME_LOG_MAIN,"download_m3u8_finish = %lld", av_gettime() / 1000);
             s->app_ctx->pss->m3u8_complete = 1;
 		}
 	}
+    
     if (s->app_ctx
         && (!s->app_ctx->pss->master_m3u8_complete)
         && s->app_ctx->pss->media_type == AV_SEPARATE
@@ -687,7 +688,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
             av_dict_set(&tmp, "hls_reconnect_count", tag_reconnect_count->value, 0);
     }
     /////////////////////////////////////////////////////////////
-
     s->probe_score = ret;
 
     if (!s->protocol_whitelist && s->pb && s->pb->protocol_whitelist) {
@@ -711,7 +711,6 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
         goto fail;
     }
     avio_skip(s->pb, s->skip_initial_bytes);
-
     /* Check filename in case an image number is expected. */
     if (s->iformat->flags & AVFMT_NEEDNUMBER) {
         if (!av_filename_number_test(filename)) {
@@ -719,10 +718,8 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
             goto fail;
         }
     }
-
     s->duration = s->start_time = AV_NOPTS_VALUE;
     av_strlcpy(s->filename, filename ? filename : "", sizeof(s->filename));
-
     /* Allocate private data. */
     if (s->iformat->priv_data_size > 0) {
         if (!(s->priv_data = av_mallocz(s->iformat->priv_data_size))) {
@@ -739,18 +736,22 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
     /* e.g. AVFMT_NOFILE formats will not have a AVIOContext */
     if (s->pb)
         ff_id3v2_read(s, ID3v2_DEFAULT_MAGIC, &id3v2_extra_meta, 0);
-
     if (!(s->flags&AVFMT_FLAG_PRIV_OPT)) {
         if (s->iformat->read_header2) {
             if (options)
                 av_dict_copy(&tmp2, *options, 0);
 
             if ((ret = s->iformat->read_header2(s, &tmp2)) < 0)
+            {
                 goto fail;
+            }
+                
         } else if (s->iformat->read_header && (ret = s->iformat->read_header(s)) < 0)
+        {
             goto fail;
+        }
+            
     }
-
     if (!s->metadata) {
         s->metadata = s->internal->id3v2_meta;
         s->internal->id3v2_meta = NULL;
@@ -776,19 +777,19 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
             av_log(s, AV_LOG_DEBUG, "demuxer does not support additional id3 data, skipping\n");
     }
     ff_id3v2_free_extra_meta(&id3v2_extra_meta);
-
     if ((ret = avformat_queue_attached_pictures(s)) < 0)
+    {
         goto fail;
+    }
+
 
     if (!(s->flags&AVFMT_FLAG_PRIV_OPT) && s->pb && !s->internal->data_offset)
         s->internal->data_offset = avio_tell(s->pb);
 
     s->internal->raw_packet_buffer_remaining_size = RAW_PACKET_BUFFER_SIZE;
-
     update_stream_avctx(s);
     for (i = 0; i < s->nb_streams; i++)
         s->streams[i]->internal->orig_codec_id = s->streams[i]->codecpar->codec_id;
-
     if (options) {
         av_dict_free(options);
         *options = tmp;
@@ -971,7 +972,10 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
         pkt->data = NULL;
         pkt->size = 0;
         av_init_packet(pkt);
+
         ret = s->iformat->read_packet(s, pkt);
+
+
         if (ret < 0) {
             /* Some demuxers return FFERROR_REDO when they consume
                data and discard it (ignored streams, junk, extradata).
@@ -1702,7 +1706,6 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
 {
     int ret = 0, i, got_packet = 0;
     AVDictionary *metadata = NULL;
-
     av_init_packet(pkt);
     while (!got_packet && !s->internal->parse_queue) {
         AVStream *st;
@@ -1822,7 +1825,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
     if (!got_packet && s->internal->parse_queue)
         ret = read_from_packet_buffer(&s->internal->parse_queue, &s->internal->parse_queue_end, pkt);
-
     if (ret >= 0) {
         AVStream *st = s->streams[pkt->stream_index];
         int discard_padding = 0;
@@ -1897,10 +1899,11 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
     int eof = 0;
     int ret;
     AVStream *st;
-    if (!genpts) {
-        ret = s->internal->packet_buffer
-              ? read_from_packet_buffer(&s->internal->packet_buffer,
-                                        &s->internal->packet_buffer_end, pkt)
+   
+    if (!genpts)
+     {
+        int64_t itemp = av_gettime()/1000;
+        ret = s->internal->packet_buffer ? read_from_packet_buffer(&s->internal->packet_buffer,&s->internal->packet_buffer_end, pkt)
               : read_frame_internal(s, pkt);
         if (ret < 0)
             return ret;
@@ -1940,11 +1943,11 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
                 }
                 pktl = s->internal->packet_buffer;
             }
-
             /* read packet from packet buffer, if there is data */
             st = s->streams[next_pkt->stream_index];
             if (!(next_pkt->pts == AV_NOPTS_VALUE && st->discard < AVDISCARD_ALL &&
-                  next_pkt->dts != AV_NOPTS_VALUE && !eof)) {
+                  next_pkt->dts != AV_NOPTS_VALUE && !eof))
+            {
                 ret = read_from_packet_buffer(&s->internal->packet_buffer,
                                                &s->internal->packet_buffer_end, pkt);
                 goto return_packet;
@@ -3695,66 +3698,6 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
     int64_t probesize = ic->probesize;
     int eof_reached = 0;
 
-    int *missing_streams = av_opt_ptr(ic->iformat->priv_class, ic->priv_data, "missing_streams");
-
-    AVDictionaryEntry *t;
-
-    t = av_dict_get(ic->metadata, "nb-streams", NULL, AV_DICT_MATCH_CASE);
-    if (t) {
-        int nb_streams = (int) strtol(t->value, NULL, 10);
-        if (nb_streams > 0) {
-            int64_t read_size = 0;
-            int found_all_streams = 0;
-            while (!found_all_streams) {
-                if (read_size >= probesize) {
-                    av_log(NULL, AV_LOG_INFO, "probe fail\n");
-                    return ic->nb_streams;
-                }
-
-                ret = read_frame_internal(ic, &pkt1);
-                if (ret == AVERROR(EAGAIN))
-                    continue;
-                if (ret < 0) {
-                    //EOF or error
-                    eof_reached = 1;
-                    break;
-                }
-                pkt = &pkt1;
-
-                if (!(ic->streams[pkt->stream_index]->disposition & AV_DISPOSITION_ATTACHED_PIC))
-                    read_size += pkt->size;
-
-                if (!(ic->flags & AVFMT_FLAG_NOBUFFER)) {
-                    ret = ff_packet_list_put(&ic->internal->raw_packet_buffer,
-                                             &ic->internal->raw_packet_buffer_end,
-                                             pkt,0);
-                    if (ret < 0)
-                        return ret;
-                }
-
-                for(i = 0; i < ic->nb_streams; i++) {
-                    int64_t cur_start_time = AV_NOPTS_VALUE;
-                    if (ic->streams[i]->start_time != AV_NOPTS_VALUE) {
-                        cur_start_time = av_rescale_q(ic->streams[i]->start_time,
-                                                        ic->streams[i]->time_base,
-                                                        AV_TIME_BASE_Q);
-                    }
-                    if (cur_start_time != AV_NOPTS_VALUE &&
-                        (ic->start_time == AV_NOPTS_VALUE || ic->start_time > cur_start_time)){
-                       ic->start_time = cur_start_time;
-                    }
-                }
-
-                if (ic->nb_streams >= nb_streams && ic->start_time != AV_NOPTS_VALUE) {
-                    av_log(NULL, AV_LOG_INFO, "probe pass\n");
-                    found_all_streams  = 1;
-                }
-            }
-            av_dict_set_int(&ic->metadata, "nb-streams", 0, 0);
-            return ret < 0 ? ret : ic->nb_streams;
-        }
-    }
-
     flush_codecs = probesize > 0;
 
     av_opt_set(ic, "skip_clear", "1", AV_OPT_SEARCH_CHILDREN);
@@ -3853,11 +3796,15 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
 
     for (i = 0; i < ic->nb_streams; i++) {
-#if FF_API_R_FRAME_RATE
-        ic->streams[i]->info->last_dts = AV_NOPTS_VALUE;
-#endif
-        ic->streams[i]->info->fps_first_dts = AV_NOPTS_VALUE;
-        ic->streams[i]->info->fps_last_dts  = AV_NOPTS_VALUE;
+        if(ic->streams[i] && ic->streams[i]->info)
+        {
+    #if FF_API_R_FRAME_RATE
+            ic->streams[i]->info->last_dts = AV_NOPTS_VALUE;
+    #endif
+            ic->streams[i]->info->fps_first_dts = AV_NOPTS_VALUE;
+            ic->streams[i]->info->fps_last_dts  = AV_NOPTS_VALUE;            
+        }
+
     }
 
     read_size = 0;
@@ -4406,7 +4353,6 @@ int av_find_best_stream(AVFormatContext *ic, enum AVMediaType type,
     int ret = AVERROR_STREAM_NOT_FOUND, best_count = -1, best_bitrate = -1, best_multiframe = -1, count, bitrate, multiframe;
     unsigned *program = NULL;
     const AVCodec *decoder = NULL, *best_decoder = NULL;
-
     if (related_stream >= 0 && wanted_stream_nb < 0) {
         AVProgram *p = av_find_program_from_stream(ic, NULL, related_stream);
         if (p) {
@@ -4414,7 +4360,8 @@ int av_find_best_stream(AVFormatContext *ic, enum AVMediaType type,
             nb_streams = p->nb_stream_indexes;
         }
     }
-    for (i = 0; i < nb_streams; i++) {
+    for (i = 0; i < nb_streams; i++) 
+    {
         int real_stream_index = program ? program[i] : i;
         AVStream *st          = ic->streams[real_stream_index];
         AVCodecParameters *par = st->codecpar;
@@ -4428,10 +4375,12 @@ int av_find_best_stream(AVFormatContext *ic, enum AVMediaType type,
             continue;
         if (type == AVMEDIA_TYPE_AUDIO && !(par->channels && par->sample_rate))
             continue;
-        if (decoder_ret) {
+        if (decoder_ret) 
+        {
             decoder = find_decoder(ic, st, par->codec_id);
             if (!decoder) {
                 if (ret < 0)
+                
                     ret = AVERROR_DECODER_NOT_FOUND;
                 continue;
             }
@@ -4605,7 +4554,6 @@ void avformat_free_context(AVFormatContext *s)
     int i;
     if (!s)
         return;
-
     av_opt_free(s);
     if (s->iformat && s->iformat->priv_class && s->priv_data)
         av_opt_free(s->priv_data);
@@ -4613,7 +4561,6 @@ void avformat_free_context(AVFormatContext *s)
         av_opt_free(s->priv_data);
     for (i = s->nb_streams - 1; i >= 0; i--)
         ff_free_stream(s, s->streams[i]);
-
     for (i = s->nb_programs - 1; i >= 0; i--) {
         av_dict_free(&s->programs[i]->metadata);
         av_freep(&s->programs[i]->stream_index);
@@ -4621,9 +4568,14 @@ void avformat_free_context(AVFormatContext *s)
     }
     av_freep(&s->programs);
     av_freep(&s->priv_data);
-    while (s->nb_chapters--) {
-        av_dict_free(&s->chapters[s->nb_chapters]->metadata);
-        av_freep(&s->chapters[s->nb_chapters]);
+    while (s->nb_chapters--) 
+    {
+        if(s->chapters && s->chapters[s->nb_chapters])
+        {
+            av_dict_free(&s->chapters[s->nb_chapters]->metadata);
+            av_freep(&s->chapters[s->nb_chapters]);
+        }
+
     }
     av_freep(&s->chapters);
     av_dict_free(&s->metadata);
@@ -4819,13 +4771,12 @@ void av_program_add_stream_index(AVFormatContext *ac, int progid, unsigned idx)
     int i, j;
     AVProgram *program = NULL;
     void *tmp;
-
     if (idx >= ac->nb_streams) {
         av_log(ac, AV_LOG_ERROR, "stream index %d is not valid\n", idx);
         return;
     }
-
-    for (i = 0; i < ac->nb_programs; i++) {
+    for (i = 0; i < ac->nb_programs; i++) 
+    {
         if (ac->programs[i]->id != progid)
             continue;
         program = ac->programs[i];
@@ -5115,7 +5066,6 @@ void ff_parse_key_value(const char *str, ff_parse_key_val_cb callback_get_buf,
                         void *context)
 {
     const char *ptr = str;
-
     /* Parse key=value pairs. */
     for (;;) {
         const char *key;
@@ -5134,10 +5084,8 @@ void ff_parse_key_value(const char *str, ff_parse_key_val_cb callback_get_buf,
             break;
         ptr++;
         key_len = ptr - key;
-
         callback_get_buf(context, key, key_len, &dest, &dest_len);
         dest_end = dest + dest_len - 1;
-
         if (*ptr == '\"') {
             ptr++;
             while (*ptr && *ptr != '\"') {
@@ -5813,7 +5761,11 @@ void ff_format_io_close(AVFormatContext *s, AVIOContext **pb)
         s->io_close(s, *pb);
     *pb = NULL;
 }
-
+void ff_format_io_close_use_m3u8_optimize_read(AVFormatContext *s, AVIOContext **pb)
+{
+    if (*pb)
+        s->io_close_use_m3u8_optimize_read(s, *pb);
+}
 int ff_is_http_proto(char *filename) {
     const char *proto = avio_find_protocol_name(filename);
     return proto ? (!av_strcasecmp(proto, "http") || !av_strcasecmp(proto, "https")) : 0;

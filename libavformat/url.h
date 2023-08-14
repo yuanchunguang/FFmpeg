@@ -98,6 +98,7 @@ typedef struct URLProtocol {
     int     (*url_write)(URLContext *h, const unsigned char *buf, int size);
     int64_t (*url_seek)( URLContext *h, int64_t pos, int whence);
     int     (*url_close)(URLContext *h);
+     int     (*url_close_use_m3u8_optimize_read)(URLContext *h);   
     int (*url_read_pause)(URLContext *h, int pause);
     int64_t (*url_read_seek)(URLContext *h, int stream_index,
                              int64_t timestamp, int flags);
@@ -246,7 +247,8 @@ int64_t ffurl_seek(URLContext *h, int64_t pos, int whence);
  */
 int ffurl_closep(URLContext **h);
 int ffurl_close(URLContext *h);
-
+int ffurl_closep_use_m3u8_optimize_read(URLContext **h);
+int ffurl_close_use_m3u8_optimize_read(URLContext *h);
 /**
  * Return the filesize of the resource accessed by h, AVERROR(ENOSYS)
  * if the operation is not supported by h, or another negative value

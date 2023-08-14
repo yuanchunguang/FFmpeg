@@ -37,7 +37,7 @@
 #include <unistd.h>
 #endif
 #include <fcntl.h>
-#define IO_BUFFER_SIZE 32768
+#define IO_BUFFER_SIZE 32768*8
 #define FILE_EXT_TS  "ts"
 #define FILE_EXT_M3U8 "m3u8"
 #include "global_variables.h"
@@ -555,7 +555,6 @@ static int read_packet_wrapper(AVIOContext *s, uint8_t *buf, int size)
     int ret;
     if (!s->read_packet)
         return AVERROR(EINVAL);
-    av_log(NULL,AV_LOG_ERROR,"winston  ========= read_packet  1  =% p  \n",s);  
     ret = s->read_packet(s->opaque, buf, size);
 #if FF_API_OLD_AVIO_EOF_0
     if (!ret && !s->max_packet_size) {
@@ -811,7 +810,6 @@ int ffio_read_partial(AVIOContext *s, unsigned char *buf, int size)
         return -1;
     if (s->read_packet && s->write_flag) 
     {
-         av_log(NULL,AV_LOG_ERROR,"winston  ========= read_packet  4  =% p  \n",s);  
         len = s->read_packet(s->opaque, buf, size);
         if (len > 0)
             s->pos += len;
@@ -1365,6 +1363,18 @@ int avio_close(AVIOContext *s)
     av_freep(&s->customkey_src);
     av_free(s);
     return ffurl_close(h);
+}
+int avio_close_use_m3u8_optimize_read(AVIOContext *s)
+{
+    AVIOInternal *internal;
+    URLContext *h;
+
+    if (!s)
+        return 0;
+
+    internal = s->opaque;
+    h        = internal->h;
+    return ffurl_close_use_m3u8_optimize_read(h);
 }
 
 int avio_closep(AVIOContext **s)

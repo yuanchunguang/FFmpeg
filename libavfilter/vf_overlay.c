@@ -896,7 +896,10 @@ static int do_blend(FFFrameSync *fs)
         s->var_values[VAR_OVERLAY_H] = s->var_values[VAR_OH] = second->height;
         s->var_values[VAR_MAIN_W   ] = s->var_values[VAR_MW] = mainpic->width;
         s->var_values[VAR_MAIN_H   ] = s->var_values[VAR_MH] = mainpic->height;
-
+        //winstonlog
+        set_expr(&s->x_pexpr,s->x_expr,"x",ctx);
+        set_expr(&s->y_pexpr,s->y_expr,"y",ctx);
+        //winstonlog
         eval_expr(ctx);
         av_log(ctx, AV_LOG_DEBUG, "n:%f t:%f pos:%f x:%f xi:%d y:%f yi:%d\n",
                s->var_values[VAR_N], s->var_values[VAR_T], s->var_values[VAR_POS],

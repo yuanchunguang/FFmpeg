@@ -32,7 +32,18 @@
 static const struct {
     const char *from;
     const char *to;
-} webvtt_tag_replace[] = {
+} 
+webvtt_tag_replace[] = {
+    {"<i>", ""}, {"</i>", ""},
+    {"<b>", ""}, {"</b>", ""},
+    {"<u>", ""}, {"</u>", ""},
+    {"{", ""}, {"}", "}"}, // escape to avoid ASS markup conflicts
+    {"&gt;", ">"}, {"&lt;", "<"},
+    {"&lrm;", ""}, {"&rlm;", ""}, // FIXME: properly honor bidi marks
+    {"&amp;", "&"}, {"&nbsp;", "\\h"},
+};
+/*
+webvtt_tag_replace[] = {
     {"<i>", "{\\i1}"}, {"</i>", "{\\i0}"},
     {"<b>", "{\\b1}"}, {"</b>", "{\\b0}"},
     {"<u>", "{\\u1}"}, {"</u>", "{\\u0}"},
@@ -41,11 +52,10 @@ static const struct {
     {"&lrm;", ""}, {"&rlm;", ""}, // FIXME: properly honor bidi marks
     {"&amp;", "&"}, {"&nbsp;", "\\h"},
 };
-
+*/
 static int webvtt_event_to_ass(AVBPrint *buf, const char *p)
 {
     int i, again = 0, skip = 0;
-
     while (*p) {
 
         for (i = 0; i < FF_ARRAY_ELEMS(webvtt_tag_replace); i++) {

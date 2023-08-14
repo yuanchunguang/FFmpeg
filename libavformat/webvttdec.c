@@ -39,6 +39,7 @@ typedef struct {
 
 static int webvtt_probe(AVProbeData *p)
 {
+
     const uint8_t *ptr = p->buf;
 
     if (AV_RB24(ptr) == 0xEFBBBF)
@@ -56,15 +57,52 @@ static int64_t read_ts(const char *s)
     if (sscanf(s,    "%u:%u.%u",      &mm, &ss, &ms) == 3) return (            mm*60LL + ss) * 1000LL + ms;
     return AV_NOPTS_VALUE;
 }
-
-static int webvtt_flush_data(AVFormatContext *s)
+//将串s1中的子串s2替换成串s3
+static char* replace(char*s1,char*s2,char*s3)
+{
+    char *p,*from,*to,*begin=s1;
+    int c1,c2,c3,c;         //串长度及计数
+    c2=strlen(s2);
+    c3=(s3!=NULL)?strlen(s3):0;
+    if(c2==0)return s1;     //注意要退出
+    while(1)             //替换所有出现的串
+    {
+        c1=strlen(begin);
+        p=strstr(begin,s2); //出现位置
+        if(p==NULL)         //没找到
+            return s1;
+        if(c2>c3)           //串往前移
+        {
+            from=p+c2;
+            to=p+c3;
+            c=c1-c2+begin-p+1;
+            while(c--)
+                *to++=*from++;
+        }
+        else if(c2<c3)      //串往后移
+        {
+            from=begin+c1;
+            to=from-c2+c3;
+            c=from-p-c2+1;
+            while(c--)
+                *to--=*from--;
+        }
+        if(c3)              //完成替换
+        {
+            from=s3,to=p,c=c3;
+            while(c--)
+                *to++=*from++;
+        }
+        begin=p+c3;         //新的查找位置
+    }
+}
+static int webvtt_flush_data(AVFormatContext *s,int iType)
 {
     WebVTTContext *webvtt = s->priv_data;
      AVBPrint header, cue;
     int res = 0;
     av_bprint_init(&header, 0, AV_BPRINT_SIZE_UNLIMITED);
     av_bprint_init(&cue,    0, AV_BPRINT_SIZE_UNLIMITED);
-
     for (;;) 
     {
         if ( webvtt->q.nb_subs >=webvtt->q.current_sub_idx +MAX_TEXT_COUNT)
@@ -72,23 +110,24 @@ static int webvtt_flush_data(AVFormatContext *s)
         int i;
         int64_t pos;
         AVPacket *sub;
-        const char *p, *identifier, *settings;
+        char *p, *identifier, *settings;
         int identifier_len, settings_len;
         int64_t ts_start, ts_end;
-
         ff_subtitles_read_chunk(s->pb, &cue);
-
         if (!cue.len)
             break;
 
         p = identifier = cue.str;
         pos = avio_tell(s->pb);
-
+        
         /* ignore header chunk */
         if (!strncmp(p, "\xEF\xBB\xBFWEBVTT", 9) ||
             !strncmp(p, "WEBVTT", 6) ||
             !strncmp(p, "NOTE", 4))
-            continue;
+            {
+                continue;
+            }
+        //p=replace(p,"WEBVTT","");
 
         /* optional cue identifier (can be a number like in SRT or some kind of
          * chaptering id) */
@@ -139,8 +178,7 @@ static int webvtt_flush_data(AVFormatContext *s)
         }
         sub->pos = pos;
         sub->pts = ts_start;
-        sub->duration = ts_end - ts_start;
-
+        sub->duration = ts_end - ts_start; 
 #define SET_SIDE_DATA(name, type) do {                                  \
     if (name##_len) {                                                   \
         uint8_t *buf = av_packet_new_side_data(sub, type, name##_len);  \
@@ -154,10 +192,10 @@ static int webvtt_flush_data(AVFormatContext *s)
 
         SET_SIDE_DATA(identifier, AV_PKT_DATA_WEBVTT_IDENTIFIER);
         SET_SIDE_DATA(settings,   AV_PKT_DATA_WEBVTT_SETTINGS);
+            
     }
 
     ff_subtitles_queue_finalize(s, &webvtt->q);
-
 end:
     av_bprint_finalize(&cue,    NULL);
     av_bprint_finalize(&header, NULL);
@@ -175,14 +213,15 @@ static int webvtt_read_header(AVFormatContext *s)
     st->codecpar->codec_type = AVMEDIA_TYPE_SUBTITLE;
     st->codecpar->codec_id   = AV_CODEC_ID_WEBVTT;
     st->disposition |= webvtt->kind;
-    return  webvtt_flush_data(s);
+    return 0;
+    return  webvtt_flush_data(s,0);
 
 }
 
 static int webvtt_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
     WebVTTContext *webvtt = s->priv_data;
-    webvtt_flush_data(s);
+    webvtt_flush_data(s,1);
     return ff_subtitles_queue_read_packet(&webvtt->q, pkt);
 }
 

@@ -1344,6 +1344,12 @@ enum AVDurationEstimationMethod {
     AVFMT_DURATION_FROM_BITRATE ///< Duration estimated from bitrate (less accurate)
 };
 
+enum HLS_STREAM_STATE {
+    STREAM_UNKNOW,    
+    STREAM_CAN_FIND_SUBTITLE, 
+    STREAM_FOUND_SUBTITLE, 
+    STREAM_OPEND_ALL 
+};
 typedef struct AVFormatInternal AVFormatInternal;
 
 /**
@@ -1519,6 +1525,7 @@ typedef struct AVFormatContext {
 #define AVFMT_FLAG_SHORTEST   0x100000 ///< Stop muxing when the shortest stream stops.
 #define AVFMT_FLAG_AUTO_BSF   0x200000 ///< Add bitstream filters as requested by the muxer
 
+#define AVFMT_FLAG_SUBTITLE_PKT   0x400000 ///< get  subtitle pkt  requested by the read thread
     /**
      * Maximum size of the data read from input for determining
      * the input container format.
@@ -1947,7 +1954,7 @@ typedef struct AVFormatContext {
      * A callback for closing the streams opened with AVFormatContext.io_open().
      */
     void (*io_close)(struct AVFormatContext *s, AVIOContext *pb);
-
+    void (*io_close_use_m3u8_optimize_read)(struct AVFormatContext *s, AVIOContext *pb);
     /**
      * ',' separated list of disallowed protocols.
      * - encoding: unused
@@ -1963,6 +1970,8 @@ typedef struct AVFormatContext {
     int max_streams;
     int64_t app_ctx_intptr;
     AVApplicationContext *app_ctx;
+    enum HLS_STREAM_STATE   StreamChange;
+    int current_subtitle_streamIndex;
 } AVFormatContext;
 
 #if FF_API_FORMAT_GET_SET
